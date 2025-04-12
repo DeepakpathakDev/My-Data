@@ -1,0 +1,49 @@
+{
+  "name": "trading-dashboard",
+  "version": "1.0.0",
+  "description": "Financial Data Dashboard",
+  "main": "app.js",
+  "scripts": {
+    "start": "node dist/app.js",
+    "dev": "nodemon app.js",
+    "build": "node build.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maanavshah/stock-market-india.git"
+  },
+  "keywords": [
+    "api",
+    "indian",
+    "stock",
+    "market",
+    "exchange",
+    "api",
+    "BSE",
+    "NSE",
+    "node",
+    "express"
+  ],
+  "author": "Maanav Shah",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/maanavshah/stock-market-india/issues"
+  },
+  "homepage": "https://github.com/maanavshah/stock-market-india#readme",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "express-rate-limit": "^7.5.0",
+    "node-cache": "^5.1.2",
+    "serpapi": "^2.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

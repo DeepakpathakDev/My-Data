@@ -1,0 +1,2016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StockInsight - Market Data</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>tailwind.config={theme:{extend:{colors:{primary:'#4f46e5',secondary:'#10b981'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+html {
+scroll-behavior: smooth;
+}
+body {
+background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+color: #f8fafc;
+min-height: 100vh;
+}
+.hero-wave {
+position: absolute;
+width: 100%;
+height: 120px;
+bottom: -50px;
+left: 0;
+z-index: 0;
+}
+.dashboard-glow {
+box-shadow: 0 0 30px rgba(79, 70, 229, 0.2);
+}
+.feature-card {
+background: rgba(30, 41, 59, 0.5);
+backdrop-filter: blur(10px);
+transition: all 0.3s ease;
+}
+.feature-card:hover {
+transform: translateY(-5px);
+box-shadow: 0 10px 25px rgba(79, 70, 229, 0.15);
+}
+.testimonial-card {
+background: rgba(30, 41, 59, 0.5);
+backdrop-filter: blur(10px);
+}
+.client-logo {
+filter: grayscale(100%) brightness(2);
+opacity: 0.6;
+transition: all 0.3s ease;
+}
+.client-logo:hover {
+filter: grayscale(0%) brightness(2);
+opacity: 1;
+}
+.gradient-text {
+background: linear-gradient(90deg, #4f46e5, #10b981);
+-webkit-background-clip: text;
+background-clip: text;
+color: transparent;
+}
+input:focus {
+outline: none;
+}
+.animate-on-scroll {
+opacity: 0;
+transform: translateY(30px);
+transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+.animate-on-scroll.visible {
+opacity: 1;
+transform: translateY(0);
+}
+.team-card {
+background: rgba(30, 41, 59, 0.5);
+backdrop-filter: blur(10px);
+transition: all 0.3s ease;
+}
+.team-card:hover {
+transform: translateY(-5px);
+box-shadow: 0 10px 25px rgba(79, 70, 229, 0.15);
+}
+.timeline-item {
+position: relative;
+}
+.timeline-item::before {
+content: '';
+position: absolute;
+left: 0;
+top: 0;
+width: 1px;
+height: 100%;
+background: linear-gradient(to bottom, rgba(79, 70, 229, 0.5), rgba(16, 185, 129, 0.5));
+}
+.timeline-dot {
+position: absolute;
+left: -5px;
+top: 0;
+width: 10px;
+height: 10px;
+border-radius: 50%;
+background: #4f46e5;
+}
+.market-card {
+background: rgba(30, 41, 59, 0.5);
+backdrop-filter: blur(10px);
+transition: all 0.3s ease;
+}
+.market-card:hover {
+transform: translateY(-3px);
+box-shadow: 0 8px 20px rgba(79, 70, 229, 0.12);
+}
+.positive-change {
+color: #10b981;
+}
+.negative-change {
+color: #ef4444;
+}
+.tab-active {
+color: #4f46e5;
+border-bottom: 2px solid #4f46e5;
+}
+.watchlist-item:hover {
+background: rgba(79, 70, 229, 0.1);
+}
+</style>
+</head>
+<body>
+<!-- Header Navigation -->
+<header class="w-full py-4 px-6 md:px-12 fixed top-0 left-0 z-50 bg-slate-900/80 backdrop-blur-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<a href="index.html" class="text-2xl font-['Pacifico'] text-white mr-2">logo</a>
+</div>
+<nav class="hidden md:flex items-center space-x-8">
+<a href="index.html" class="text-gray-300 hover:text-primary transition">Home</a>
+<a href="about.html" class="text-gray-300 hover:text-primary transition">About</a>
+<a href="market.html" class="text-white hover:text-primary transition">Market</a>
+<a href="index.html#features" class="text-gray-300 hover:text-primary transition">Features</a>
+<a href="index.html#pricing" class="text-gray-300 hover:text-primary transition">Pricing</a>
+<a href="index.html#contact" class="text-gray-300 hover:text-primary transition">Contact</a>
+</nav>
+<div class="flex items-center">
+<button class="bg-gradient-to-r from-primary to-indigo-600 text-white px-6 py-2 !rounded-button whitespace-nowrap">Sign In</button>
+</div>
+<div class="md:hidden flex items-center">
+<button id="mobileMenuButton" class="text-white">
+<i class="ri-menu-line ri-2x"></i>
+</button>
+</div>
+</div>
+<div id="mobileMenu" class="hidden md:hidden absolute top-full left-0 w-full bg-slate-900/95 backdrop-blur-md">
+<div class="flex flex-col p-4">
+<a href="index.html" class="text-gray-300 hover:text-primary transition py-2">Home</a>
+<a href="about.html" class="text-gray-300 hover:text-primary transition py-2">About</a>
+<a href="market.html" class="text-white hover:text-primary transition py-2">Market</a>
+<a href="index.html#features" class="text-gray-300 hover:text-primary transition py-2">Features</a>
+<a href="index.html#pricing" class="text-gray-300 hover:text-primary transition py-2">Pricing</a>
+<a href="index.html#contact" class="text-gray-300 hover:text-primary transition py-2">Contact</a>
+<button class="bg-gradient-to-r from-primary to-indigo-600 text-white px-6 py-2 !rounded-button whitespace-nowrap mt-4">Sign In</button>
+</div>
+</div>
+</header>
+<!-- Market Data Sub Navigation -->
+<section class="relative w-full pt-24 pb-4">
+<div class="max-w-7xl mx-auto px-6 md:px-12">
+<div class="flex flex-col items-start mb-6">
+<h1 class="text-3xl md:text-4xl font-bold mb-2">Market <span class="gradient-text">Data</span></h1>
+<p class="text-gray-300 text-base">Real-time market insights and analysis for informed investment decisions</p>
+</div>
+<div class="overflow-x-auto pb-2">
+<div class="flex space-x-6 border-b border-gray-700 min-w-max">
+<button id="tab-stocks" class="py-3 px-4 text-primary font-medium tab-active whitespace-nowrap">Stocks</button>
+<button id="tab-mutual-funds" class="py-3 px-4 text-gray-300 hover:text-primary font-medium whitespace-nowrap">Mutual Funds</button>
+<button id="tab-etfs" class="py-3 px-4 text-gray-300 hover:text-primary font-medium whitespace-nowrap">ETFs</button>
+<button id="tab-commodities" class="py-3 px-4 text-gray-300 hover:text-primary font-medium whitespace-nowrap">Commodities</button>
+<button id="tab-forex" class="py-3 px-4 text-gray-300 hover:text-primary font-medium whitespace-nowrap">Forex</button>
+<button id="tab-crypto" class="py-3 px-4 text-gray-300 hover:text-primary font-medium whitespace-nowrap">Cryptocurrencies</button>
+<button id="tab-bonds" class="py-3 px-4 text-gray-300 hover:text-primary font-medium whitespace-nowrap">Bonds</button>
+<button id="tab-global" class="py-3 px-4 text-gray-300 hover:text-primary font-medium whitespace-nowrap">Global Markets</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Market Overview Section -->
+<section class="w-full py-6">
+<div class="max-w-7xl mx-auto px-6 md:px-12">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+<div class="col-span-2">
+<div class="bg-slate-800/50 rounded-lg p-6">
+<div class="flex justify-between items-center mb-4">
+<h2 class="text-xl font-semibold">Market Indices</h2>
+<div class="text-sm text-gray-400">Last updated: April 3, 2025 15:30 IST</div>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="market-card p-4 rounded-lg">
+<div class="text-sm text-gray-400 mb-1">NIFTY 50</div>
+<div class="text-xl font-semibold">17,302.70</div>
+<div class="flex items-center positive-change text-sm">
+<i class="ri-arrow-up-line mr-1"></i>
+<span>+29.45 (0.24%)</span>
+</div>
+</div>
+<div class="market-card p-4 rounded-lg">
+<div class="text-sm text-gray-400 mb-1">SENSEX</div>
+<div class="text-xl font-semibold">58,382.70</div>
+<div class="flex items-center positive-change text-sm">
+<i class="ri-arrow-up-line mr-1"></i>
+<span>+15.25 (0.21%)</span>
+</div>
+</div>
+<div class="market-card p-4 rounded-lg">
+<div class="text-sm text-gray-400 mb-1">BANKNIFTY</div>
+<div class="text-xl font-semibold">37,392.70</div>
+<div class="flex items-center positive-change text-sm">
+<i class="ri-arrow-up-line mr-1"></i>
+<span>+29.45 (0.24%)</span>
+</div>
+</div>
+<div class="market-card p-4 rounded-lg">
+<div class="text-sm text-gray-400 mb-1">NIFTY 100</div>
+<div class="text-xl font-semibold">17,892.70</div>
+<div class="flex items-center positive-change text-sm">
+<i class="ri-arrow-up-line mr-1"></i>
+<span>+22.15 (0.21%)</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="col-span-1">
+<div class="bg-slate-800/50 rounded-lg p-6 h-full">
+<div class="flex justify-between items-center mb-4">
+<h2 class="text-xl font-semibold">Stock Performance</h2>
+<div class="text-xs text-gray-400" id="last-updated">Last updated: <span id="update-time">April 3, 2025 15:30</span></div>
+</div>
+<div id="miniStockChart" class="w-full h-48 mb-4"></div>
+<div class="flex justify-between items-center">
+<button id="view-1d" class="text-xs px-3 py-1 bg-slate-700/50 hover:bg-primary/20 text-gray-300 !rounded-button whitespace-nowrap">1D</button>
+<button id="view-1w" class="text-xs px-3 py-1 bg-slate-700/50 hover:bg-primary/20 text-gray-300 !rounded-button whitespace-nowrap">1W</button>
+<button id="view-1m" class="text-xs px-3 py-1 bg-primary/20 text-white !rounded-button whitespace-nowrap">1M</button>
+<button id="view-3m" class="text-xs px-3 py-1 bg-slate-700/50 hover:bg-primary/20 text-gray-300 !rounded-button whitespace-nowrap">3M</button>
+<button id="view-1y" class="text-xs px-3 py-1 bg-slate-700/50 hover:bg-primary/20 text-gray-300 !rounded-button whitespace-nowrap">1Y</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Watchlist Section -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+<div class="col-span-1">
+<div class="bg-slate-800/50 rounded-lg p-6">
+<div class="flex justify-between items-center mb-4">
+<h2 class="text-xl font-semibold">Your Watchlist</h2>
+<button class="text-primary hover:text-indigo-400">
+<i class="ri-add-line ri-lg"></i>
+</button>
+</div>
+<div class="space-y-4">
+<div class="watchlist-item p-2 rounded-lg transition-all duration-200">
+<div class="flex justify-between items-center">
+<div>
+<div class="font-medium">Reliance Industries Ltd.</div>
+</div>
+<div class="text-right">
+<div class="font-semibold">₹2,254.60</div>
+<div class="positive-change text-sm">+3.22%</div>
+</div>
+</div>
+</div>
+<div class="watchlist-item p-2 rounded-lg transition-all duration-200">
+<div class="flex justify-between items-center">
+<div>
+<div class="font-medium">ITC (India)</div>
+</div>
+<div class="text-right">
+<div class="font-semibold">₹389.60</div>
+<div class="positive-change text-sm">+3.22%</div>
+</div>
+</div>
+</div>
+<div class="watchlist-item p-2 rounded-lg transition-all duration-200">
+<div class="flex justify-between items-center">
+<div>
+<div class="font-medium">Tata Energy</div>
+</div>
+<div class="text-right">
+<div class="font-semibold">₹220.60</div>
+<div class="negative-change text-sm">-1.50%</div>
+</div>
+</div>
+</div>
+<div class="text-center mt-4">
+<button class="text-primary hover:text-indigo-400 text-sm">View All</button>
+</div>
+</div>
+</div>
+</div>
+<div class="col-span-2">
+<div class="bg-slate-800/50 rounded-lg p-6">
+<div class="flex justify-between items-center mb-4">
+<h2 class="text-xl font-semibold">Today's Gainers</h2>
+<button id="view-all-gainers" class="text-primary hover:text-indigo-400 text-sm">View All</button>
+</div>
+<div id="gainers-container" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+<div class="market-card p-4 rounded-lg">
+<div class="flex items-center mb-2">
+<div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+<span class="text-blue-800 text-xs font-bold">TM</span>
+</div>
+<div class="text-sm font-medium">Tech Mahindra</div>
+</div>
+<div class="text-lg font-semibold">₹1,286.00</div>
+<div class="flex items-center positive-change text-sm">
+<i class="ri-arrow-up-line mr-1"></i>
+<span>+7.40 (0.64%)</span>
+</div>
+</div>
+<div class="market-card p-4 rounded-lg">
+<div class="flex items-center mb-2">
+<div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-2">
+<span class="text-indigo-800 text-xs font-bold">BA</span>
+</div>
+<div class="text-sm font-medium">Bajaj Auto</div>
+</div>
+<div class="text-lg font-semibold">₹3,706.75</div>
+<div class="flex items-center positive-change text-sm">
+<i class="ri-arrow-up-line mr-1"></i>
+<span>+49.15 (1.44%)</span>
+</div>
+</div>
+<div class="market-card p-4 rounded-lg">
+<div class="flex items-center mb-2">
+<div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-2">
+<span class="text-red-800 text-xs font-bold">HI</span>
+</div>
+<div class="text-sm font-medium">Havells India</div>
+</div>
+<div class="text-lg font-semibold">₹1,116.70</div>
+<div class="flex items-center positive-change text-sm">
+<i class="ri-arrow-up-line mr-1"></i>
+<span>+14.45 (1.32%)</span>
+</div>
+</div>
+<div class="market-card p-4 rounded-lg">
+<div class="flex items-center mb-2">
+<div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+<span class="text-blue-800 text-xs font-bold">TP</span>
+</div>
+<div class="text-sm font-medium">Tata Power</div>
+</div>
+<div class="text-lg font-semibold">₹190.20</div>
+<div class="flex items-center positive-change text-sm">
+<i class="ri-arrow-up-line mr-1"></i>
+<span>+0.75 (0.39%)</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Top Sectors Section -->
+<div class="bg-slate-800/50 rounded-lg p-6 mb-8">
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-xl font-semibold">Top Sectors</h2>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+<div class="market-card p-4 rounded-lg text-center">
+<div class="w-12 h-12 flex items-center justify-center bg-primary/20 rounded-full mx-auto mb-3">
+<i class="ri-bank-line ri-xl text-primary"></i>
+</div>
+<div class="font-medium mb-1">Banking</div>
+<div class="text-sm text-gray-400">24</div>
+</div>
+<div class="market-card p-4 rounded-lg text-center">
+<div class="w-12 h-12 flex items-center justify-center bg-primary/20 rounded-full mx-auto mb-3">
+<i class="ri-car-line ri-xl text-primary"></i>
+</div>
+<div class="font-medium mb-1">Automobile</div>
+<div class="text-sm text-gray-400">124</div>
+</div>
+<div class="market-card p-4 rounded-lg text-center">
+<div class="w-12 h-12 flex items-center justify-center bg-primary/20 rounded-full mx-auto mb-3">
+<i class="ri-shopping-basket-2-line ri-xl text-primary"></i>
+</div>
+<div class="font-medium mb-1">FMCG</div>
+<div class="text-sm text-gray-400">166</div>
+</div>
+<div class="market-card p-4 rounded-lg text-center">
+<div class="w-12 h-12 flex items-center justify-center bg-primary/20 rounded-full mx-auto mb-3">
+<i class="ri-heart-pulse-line ri-xl text-primary"></i>
+</div>
+<div class="font-medium mb-1">Healthcare</div>
+<div class="text-sm text-gray-400">212</div>
+</div>
+<div class="market-card p-4 rounded-lg text-center">
+<div class="w-12 h-12 flex items-center justify-center bg-primary/20 rounded-full mx-auto mb-3">
+<i class="ri-car-line ri-xl text-primary"></i>
+</div>
+<div class="font-medium mb-1">Automobile</div>
+<div class="text-sm text-gray-400">124</div>
+</div>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4">
+<div class="market-card p-4 rounded-lg text-center">
+<div class="w-12 h-12 flex items-center justify-center bg-primary/20 rounded-full mx-auto mb-3">
+<i class="ri-base-station-line ri-xl text-primary"></i>
+</div>
+<div class="font-medium mb-1">Tele-Communication</div>
+<div class="text-sm text-gray-400">45</div>
+</div>
+<div class="market-card p-4 rounded-lg text-center">
+<div class="w-12 h-12 flex items-center justify-center bg-primary/20 rounded-full mx-auto mb-3">
+<i class="ri-movie-line ri-xl text-primary"></i>
+</div>
+<div class="font-medium mb-1">Media & Entertainment</div>
+<div class="text-sm text-gray-400">120</div>
+</div>
+</div>
+</div>
+<!-- Top by Market Cap Section -->
+<div class="bg-slate-800/50 rounded-lg p-6 mb-8">
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-xl font-semibold">Top by Market Cap</h2>
+<button class="text-primary hover:text-indigo-400 text-sm">View All</button>
+</div>
+<div class="overflow-x-auto">
+<table class="min-w-full" id="stock-list-table">
+<thead>
+<tr>
+<th class="text-left py-3 px-4 text-gray-400 font-medium text-sm">Company Name</th>
+<th class="text-center py-3 px-4 text-gray-400 font-medium text-sm">Market Price</th>
+<th class="text-center py-3 px-4 text-gray-400 font-medium text-sm">Change</th>
+<th class="text-center py-3 px-4 text-gray-400 font-medium text-sm">Watchlist</th>
+</tr>
+</thead>
+<tbody id="stock-list-body">
+<tr class="border-t border-gray-700">
+<td class="py-4 px-4">
+<div class="flex items-center">
+<div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+<span class="text-blue-800 text-xs font-bold">TS</span>
+</div>
+<div>Tata Steel Limited</div>
+</div>
+</td>
+<td class="py-4 px-4 text-center">
+<div class="font-semibold">₹254.60</div>
+</td>
+<td class="py-4 px-4 text-center">
+<div class="positive-change text-sm">+1.32%</div>
+</td>
+<td class="py-4 px-4 text-center">
+<button class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-primary">
+<i class="ri-star-line ri-lg"></i>
+</button>
+</td>
+</tr>
+<tr class="border-t border-gray-700">
+<td class="py-4 px-4">
+<div class="flex items-center">
+<div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+<span class="text-green-800 text-xs font-bold">VD</span>
+</div>
+<div>Vedanta</div>
+</div>
+</td>
+<td class="py-4 px-4 text-center">
+<div class="font-semibold">₹530.60</div>
+</td>
+<td class="py-4 px-4 text-center">
+<div class="positive-change text-sm">+1.32%</div>
+</td>
+<td class="py-4 px-4 text-center">
+<button class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-primary">
+<i class="ri-star-line ri-lg"></i>
+</button>
+</td>
+</tr>
+<tr class="border-t border-gray-700">
+<td class="py-4 px-4">
+<div class="flex items-center">
+<div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
+<span class="text-yellow-800 text-xs font-bold">GI</span>
+</div>
+<div>Gail (India)</div>
+</div>
+</td>
+<td class="py-4 px-4 text-center">
+<div class="font-semibold">₹480.60</div>
+</td>
+<td class="py-4 px-4 text-center">
+<div class="negative-change text-sm">-0.32%</div>
+</td>
+<td class="py-4 px-4 text-center">
+<button class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-primary">
+<i class="ri-star-line ri-lg"></i>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Products & Tools Section -->
+<div class="bg-slate-800/50 rounded-lg p-6 mb-8">
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-xl font-semibold">Products & tools</h2>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+<div class="market-card p-4 rounded-lg text-center">
+<div class="w-12 h-12 flex items-center justify-center bg-primary/20 rounded-full mx-auto mb-3">
+<i class="ri-question-answer-line ri-xl text-primary"></i>
+</div>
+<div class="font-medium">F&O</div>
+</div>
+<div class="market-card p-4 rounded-lg text-center">
+<div class="w-12 h-12 flex items-center justify-center bg-primary/20 rounded-full mx-auto mb-3">
+<i class="ri-line-chart-line ri-xl text-primary"></i>
+</div>
+<div class="font-medium">IPO</div>
+</div>
+<div class="market-card p-4 rounded-lg text-center">
+<div class="w-12 h-12 flex items-center justify-center bg-primary/20 rounded-full mx-auto mb-3">
+<i class="ri-bar-chart-box-line ri-xl text-primary"></i>
+</div>
+<div class="font-medium">Intraday</div>
+</div>
+<div class="market-card p-4 rounded-lg text-center">
+<div class="w-12 h-12 flex items-center justify-center bg-primary/20 rounded-full mx-auto mb-3">
+<i class="ri-stock-line ri-xl text-primary"></i>
+</div>
+<div class="font-medium">All Stocks</div>
+</div>
+</div>
+<div class="mt-8 bg-indigo-900/30 rounded-lg p-6">
+<div class="flex flex-col md:flex-row items-center">
+<div class="md:w-2/3 mb-4 md:mb-0 md:pr-6">
+<h3 class="text-lg font-semibold mb-2">Pro Tools for Pro Investor</h3>
+<p class="text-gray-300 text-sm">Get advanced analytics, real-time alerts, and unlimited data exports</p>
+<button class="mt-4 text-primary hover:text-indigo-400 text-sm">See all features</button>
+</div>
+<div class="md:w-1/3">
+<img src="https://public.readdy.ai/ai/img_res/d33c332ecd5786235fe669baa28a0499.jpg" alt="Pro Tools" class="w-full h-auto rounded-lg">
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Market News Section -->
+<section class="w-full py-20 bg-slate-900/30">
+<div class="max-w-7xl mx-auto px-6 md:px-12">
+<div class="flex flex-col gap-8">
+<div class="text-center mb-4">
+<h2 class="text-3xl font-bold mb-4">Latest Market News</h2>
+<p class="text-gray-300 max-w-3xl mx-auto">Stay informed with the latest developments affecting global markets and your investments</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<div class="feature-card p-6 rounded-lg">
+<div class="flex items-center justify-between mb-4">
+<span class="text-xs text-gray-400">April 3, 2025 • 2 hours ago</span>
+<span class="bg-primary/20 text-primary text-xs px-2 py-1 rounded-full">Technology</span>
+</div>
+<h3 class="text-xl font-semibold mb-3">NVIDIA Surges 4.5% on New AI Chip Announcement</h3>
+<p class="text-gray-300 mb-4">NVIDIA shares jumped after the company unveiled its next-generation AI accelerator chip, promising 2x performance over previous models. Analysts project significant revenue growth in the coming quarters.</p>
+<div class="flex justify-between items-center">
+<a href="#" class="text-primary hover:text-indigo-400 text-sm">Read full story</a>
+<div class="flex items-center text-gray-400 text-sm">
+<i class="ri-time-line mr-1"></i>
+<span>5 min read</span>
+</div>
+</div>
+</div>
+<div class="feature-card p-6 rounded-lg">
+<div class="flex items-center justify-between mb-4">
+<span class="text-xs text-gray-400">April 3, 2025 • 4 hours ago</span>
+<span class="bg-secondary/20 text-secondary text-xs px-2 py-1 rounded-full">Finance</span>
+</div>
+<h3 class="text-xl font-semibold mb-3">Federal Reserve Signals Potential Rate Cut in June</h3>
+<p class="text-gray-300 mb-4">The Federal Reserve minutes revealed discussions about easing monetary policy as inflation shows signs of cooling. Markets rallied on the news, with the S&P 500 reaching a new all-time high.</p>
+<div class="flex justify-between items-center">
+<a href="#" class="text-primary hover:text-indigo-400 text-sm">Read full story</a>
+<div class="flex items-center text-gray-400 text-sm">
+<i class="ri-time-line mr-1"></i>
+<span>7 min read</span>
+</div>
+</div>
+</div>
+<div class="feature-card p-6 rounded-lg">
+<div class="flex items-center justify-between mb-4">
+<span class="text-xs text-gray-400">April 3, 2025 • 6 hours ago</span>
+<span class="bg-yellow-500/20 text-yellow-500 text-xs px-2 py-1 rounded-full">Energy</span>
+</div>
+<h3 class="text-xl font-semibold mb-3">Oil Prices Drop 3% Following OPEC+ Production Increase</h3>
+<p class="text-gray-300 mb-4">Crude oil futures fell after OPEC+ announced plans to increase production by 500,000 barrels per day starting next month. Energy sector stocks declined across global markets.</p>
+<div class="flex justify-between items-center">
+<a href="#" class="text-primary hover:text-indigo-400 text-sm">Read full story</a>
+<div class="flex items-center text-gray-400 text-sm">
+<i class="ri-time-line mr-1"></i>
+<span>4 min read</span>
+</div>
+</div>
+</div>
+<div class="feature-card p-6 rounded-lg">
+<div class="flex items-center justify-between mb-4">
+<span class="text-xs text-gray-400">April 3, 2025 • 8 hours ago</span>
+<span class="bg-red-500/20 text-red-500 text-xs px-2 py-1 rounded-full">Healthcare</span>
+</div>
+<h3 class="text-xl font-semibold mb-3">Moderna Shares Jump 8% on Breakthrough Cancer Vaccine Trial</h3>
+<p class="text-gray-300 mb-4">Moderna announced positive Phase 2 results for its mRNA-based cancer vaccine, showing a 35% reduction in recurrence risk. The company plans to begin Phase 3 trials by Q3 2025.</p>
+<div class="flex justify-between items-center">
+<a href="#" class="text-primary hover:text-indigo-400 text-sm">Read full story</a>
+<div class="flex items-center text-gray-400 text-sm">
+<i class="ri-time-line mr-1"></i>
+<span>6 min read</span>
+</div>
+</div>
+</div>
+<div class="feature-card p-6 rounded-lg">
+<div class="flex items-center justify-between mb-4">
+<span class="text-xs text-gray-400">April 3, 2025 • 10 hours ago</span>
+<span class="bg-blue-500/20 text-blue-500 text-xs px-2 py-1 rounded-full">Retail</span>
+</div>
+<h3 class="text-xl font-semibold mb-3">Amazon Acquires AI Shopping Assistant Startup for $2.8B</h3>
+<p class="text-gray-300 mb-4">Amazon announced the acquisition of ShopSmart AI, a startup specializing in personalized shopping recommendations. The move is expected to enhance Amazon's e-commerce capabilities.</p>
+<div class="flex justify-between items-center">
+<a href="#" class="text-primary hover:text-indigo-400 text-sm">Read full story</a>
+<div class="flex items-center text-gray-400 text-sm">
+<i class="ri-time-line mr-1"></i>
+<span>5 min read</span>
+</div>
+</div>
+</div>
+<div class="feature-card p-6 rounded-lg">
+<div class="flex items-center justify-between mb-4">
+<span class="text-xs text-gray-400">April 3, 2025 • 12 hours ago</span>
+<span class="bg-purple-500/20 text-purple-500 text-xs px-2 py-1 rounded-full">Cryptocurrency</span>
+</div>
+<h3 class="text-xl font-semibold mb-3">Bitcoin Surpasses $70,000 as Institutional Adoption Grows</h3>
+<p class="text-gray-300 mb-4">Bitcoin reached a new all-time high above $70,000 as major financial institutions continue to increase their cryptocurrency holdings. Analysts predict further upside potential.</p>
+<div class="flex justify-between items-center">
+<a href="#" class="text-primary hover:text-indigo-400 text-sm">Read full story</a>
+<div class="flex items-center text-gray-400 text-sm">
+<i class="ri-time-line mr-1"></i>
+<span>4 min read</span>
+</div>
+</div>
+</div>
+</div>
+<div class="text-center mt-8">
+<button class="bg-gradient-to-r from-primary to-indigo-600 text-white px-6 py-3 !rounded-button whitespace-nowrap">View all news</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Join Us CTA Section -->
+<section class="w-full py-20">
+<div class="max-w-4xl mx-auto px-6 md:px-12 text-center">
+<h2 class="text-3xl font-bold mb-6">Join Our Growing Team</h2>
+<p class="text-gray-300 mb-8 max-w-2xl mx-auto">We're always looking for talented individuals who are passionate about fintech and want to make a difference in how people invest.</p>
+<div class="bg-slate-800/50 rounded-lg p-8 mb-8">
+<h3 class="text-xl font-semibold mb-4">Current Openings</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-slate-700/50 p-4 rounded-lg">
+<h4 class="font-semibold mb-1">Senior Frontend Engineer</h4>
+<p class="text-gray-400 text-sm mb-2">San Francisco, CA</p>
+<button class="text-primary text-sm hover:underline">View Details</button>
+</div>
+<div class="bg-slate-700/50 p-4 rounded-lg">
+<h4 class="font-semibold mb-1">Data Scientist</h4>
+<p class="text-gray-400 text-sm mb-2">New York, NY</p>
+<button class="text-primary text-sm hover:underline">View Details</button>
+</div>
+<div class="bg-slate-700/50 p-4 rounded-lg">
+<h4 class="font-semibold mb-1">Product Manager</h4>
+<p class="text-gray-400 text-sm mb-2">London, UK</p>
+<button class="text-primary text-sm hover:underline">View Details</button>
+</div>
+<div class="bg-slate-700/50 p-4 rounded-lg">
+<h4 class="font-semibold mb-1">Financial Analyst</h4>
+<p class="text-gray-400 text-sm mb-2">Remote</p>
+<button class="text-primary text-sm hover:underline">View Details</button>
+</div>
+</div>
+</div>
+<button class="bg-gradient-to-r from-primary to-indigo-600 text-white px-8 py-3 !rounded-button whitespace-nowrap">View All Positions</button>
+</div>
+</section>
+<!-- Footer -->
+<footer id="contact" class="w-full py-12 bg-slate-900/50">
+<div class="max-w-7xl mx-auto px-6 md:px-12">
+<div class="flex flex-col md:flex-row justify-between items-center mb-8">
+<div class="flex items-center mb-6 md:mb-0">
+<a href="index.html" class="text-2xl font-['Pacifico'] text-white mr-2">logo</a>
+<span class="text-sm text-gray-400">Finance Theme</span>
+</div>
+<nav class="flex flex-wrap justify-center gap-x-8 gap-y-4">
+<a href="index.html" class="text-gray-300 hover:text-primary transition">Home</a>
+<a href="about.html" class="text-gray-300 hover:text-primary transition">About</a>
+<a href="index.html#features" class="text-gray-300 hover:text-primary transition">Features</a>
+<a href="index.html#pricing" class="text-gray-300 hover:text-primary transition">Pricing</a>
+<a href="index.html#contact" class="text-gray-300 hover:text-primary transition">Contact</a>
+</nav>
+<button class="bg-gradient-to-r from-primary to-indigo-600 text-white px-6 py-2 !rounded-button whitespace-nowrap mt-6 md:mt-0">Sign In</button>
+</div>
+<div class="border-t border-gray-700 pt-8">
+<div class="flex flex-col md:flex-row justify-between items-center">
+<p class="text-gray-400 text-sm mb-4 md:mb-0">© 2025 StockInsight. All rights reserved.</p>
+<div class="flex space-x-6">
+<a href="#" class="text-gray-400 hover:text-primary">
+<i class="ri-twitter-x-line ri-lg"></i>
+</a>
+<a href="#" class="text-gray-400 hover:text-primary">
+<i class="ri-linkedin-line ri-lg"></i>
+</a>
+<a href="#" class="text-gray-400 hover:text-primary">
+<i class="ri-facebook-line ri-lg"></i>
+</a>
+<a href="#" class="text-gray-400 hover:text-primary">
+<i class="ri-instagram-line ri-lg"></i>
+</a>
+</div>
+</div>
+</div>
+</div>
+</footer>
+<script>
+// Mobile menu toggle
+document.addEventListener('DOMContentLoaded', function() {
+const mobileMenuButton = document.getElementById('mobileMenuButton');
+const mobileMenu = document.getElementById('mobileMenu');
+mobileMenuButton.addEventListener('click', function() {
+if (mobileMenu.classList.contains('hidden')) {
+mobileMenu.classList.remove('hidden');
+mobileMenu.classList.add('block');
+} else {
+mobileMenu.classList.remove('block');
+mobileMenu.classList.add('hidden');
+}
+});
+// Animation on scroll
+const animatedElements = document.querySelectorAll('.market-card, .feature-card');
+animatedElements.forEach(element => {
+element.classList.add('animate-on-scroll');
+});
+function checkVisibility() {
+const elements = document.querySelectorAll('.animate-on-scroll');
+elements.forEach(element => {
+const rect = element.getBoundingClientRect();
+const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+if (rect.top <= windowHeight * 0.8) {
+element.classList.add('visible');
+}
+});
+}
+// Initial check
+checkVisibility();
+// Check on scroll
+window.addEventListener('scroll', checkVisibility);
+// Initialize mini stock chart
+const miniChartDom = document.getElementById('miniStockChart');
+const miniChart = echarts.init(miniChartDom);
+// Stock data for different time periods
+const stockChartData = {
+'1d': {
+dates: ['9:30', '10:30', '11:30', '12:30', '13:30', '14:30', '15:30', '16:00'],
+values: [2254.60, 2260.30, 2258.40, 2262.10, 2270.50, 2268.20, 2272.80, 2275.40]
+},
+'1w': {
+dates: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Mon', 'Tue', 'Wed'],
+values: [2230.10, 2242.50, 2238.70, 2245.20, 2250.80, 2260.40, 2268.90, 2275.40]
+},
+'1m': {
+dates: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+values: [2210.30, 2225.80, 2245.60, 2275.40]
+},
+'3m': {
+dates: ['Jan', 'Feb', 'Mar', 'Apr'],
+values: [2150.20, 2180.40, 2220.80, 2275.40]
+},
+'1y': {
+dates: ['Apr', 'Jun', 'Aug', 'Oct', 'Dec', 'Feb', 'Apr'],
+values: [2050.10, 2080.30, 2120.50, 2160.70, 2200.90, 2240.20, 2275.40]
+}
+};
+// Function to update mini chart
+function updateMiniChart(period) {
+const data = stockChartData[period];
+const stockName = document.querySelector('#miniStockChart').parentElement.querySelector('h2').textContent.replace('Stock Performance: ', '') || 'Reliance Industries Ltd.';
+// Calculate if the stock is trending up or down
+const firstValue = parseFloat(data.values[0]);
+const lastValue = parseFloat(data.values[data.values.length - 1]);
+const isPositive = lastValue >= firstValue;
+// Set color based on trend
+const trendColor = isPositive ? 'rgba(87, 181, 231, 1)' : 'rgba(252, 141, 98, 1)';
+const trendGradientStart = isPositive ? 'rgba(87, 181, 231, 0.3)' : 'rgba(252, 141, 98, 0.3)';
+const trendGradientEnd = isPositive ? 'rgba(87, 181, 231, 0.1)' : 'rgba(252, 141, 98, 0.1)';
+const miniChartOption = {
+animation: false,
+tooltip: {
+trigger: 'axis',
+backgroundColor: 'rgba(255, 255, 255, 0.8)',
+textStyle: {
+color: '#1f2937'
+},
+formatter: function(params) {
+const dataIndex = params[0].dataIndex;
+const date = data.dates[dataIndex];
+const value = params[0].value;
+// Calculate percentage change from first value
+const percentChange = ((value - firstValue) / firstValue * 100).toFixed(2);
+const changeSymbol = percentChange >= 0 ? '+' : '';
+return `<div class="font-medium">${date}</div>
+<div>${stockName}: ₹${value}</div>
+<div style="color: ${percentChange >= 0 ? '#10b981' : '#ef4444'}">${changeSymbol}${percentChange}%</div>`;
+}
+},
+grid: {
+left: '3%',
+right: '3%',
+bottom: '10%',
+top: '10%',
+containLabel: true
+},
+xAxis: {
+type: 'category',
+data: data.dates,
+axisLine: {
+lineStyle: {
+color: '#475569'
+}
+},
+axisLabel: {
+color: '#94a3b8',
+fontSize: 10
+}
+},
+yAxis: {
+type: 'value',
+axisLine: {
+lineStyle: {
+color: '#475569'
+}
+},
+splitLine: {
+lineStyle: {
+color: '#334155',
+type: 'dashed'
+}
+},
+axisLabel: {
+color: '#94a3b8',
+fontSize: 10,
+formatter: function(value) {
+// Format large numbers with K/M suffix
+if (value >= 1000 && value < 1000000) {
+return (value / 1000).toFixed(1) + 'K';
+} else if (value >= 1000000) {
+return (value / 1000000).toFixed(1) + 'M';
+}
+return value;
+}
+}
+},
+series: [
+{
+name: stockName,
+type: 'line',
+smooth: true,
+symbol: 'circle',
+symbolSize: 6,
+showSymbol: false,
+emphasis: {
+scale: true,
+focus: 'series',
+itemStyle: {
+shadowBlur: 10,
+shadowColor: 'rgba(0, 0, 0, 0.3)'
+}
+},
+lineStyle: {
+width: 3,
+color: trendColor
+},
+itemStyle: {
+color: trendColor,
+borderWidth: 2,
+borderColor: '#fff'
+},
+areaStyle: {
+color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+{
+offset: 0,
+color: trendGradientStart
+},
+{
+offset: 1,
+color: trendGradientEnd
+}
+])
+},
+data: data.values,
+markPoint: {
+symbol: 'pin',
+symbolSize: 40,
+data: [
+{ type: 'max', name: 'Max', itemStyle: { color: 'rgba(141, 211, 199, 1)' } },
+{ type: 'min', name: 'Min', itemStyle: { color: 'rgba(251, 191, 114, 1)' } }
+]
+},
+markLine: {
+silent: true,
+lineStyle: {
+color: '#94a3b8',
+type: 'dashed'
+},
+data: [
+{ type: 'average', name: 'Avg' }
+]
+}
+}
+]
+};
+miniChart.setOption(miniChartOption, true);
+}
+// Initialize with 1 month data and start real-time updates for default stock
+updateMiniChart('1m');
+updateRealTimeStockData('Reliance Industries Ltd.');
+// Add event listeners to time period buttons
+document.getElementById('view-1d').addEventListener('click', function() {
+resetTimeButtons();
+this.classList.remove('bg-slate-700/50', 'text-gray-300');
+this.classList.add('bg-primary/20', 'text-white');
+updateMiniChart('1d');
+// Update last updated time
+updateLastUpdatedTime();
+});
+document.getElementById('view-1w').addEventListener('click', function() {
+resetTimeButtons();
+this.classList.remove('bg-slate-700/50', 'text-gray-300');
+this.classList.add('bg-primary/20', 'text-white');
+updateMiniChart('1w');
+// Update last updated time
+updateLastUpdatedTime();
+});
+document.getElementById('view-1m').addEventListener('click', function() {
+resetTimeButtons();
+this.classList.remove('bg-slate-700/50', 'text-gray-300');
+this.classList.add('bg-primary/20', 'text-white');
+updateMiniChart('1m');
+// Update last updated time
+updateLastUpdatedTime();
+});
+document.getElementById('view-3m').addEventListener('click', function() {
+resetTimeButtons();
+this.classList.remove('bg-slate-700/50', 'text-gray-300');
+this.classList.add('bg-primary/20', 'text-white');
+updateMiniChart('3m');
+// Update last updated time
+updateLastUpdatedTime();
+});
+document.getElementById('view-1y').addEventListener('click', function() {
+resetTimeButtons();
+this.classList.remove('bg-slate-700/50', 'text-gray-300');
+this.classList.add('bg-primary/20', 'text-white');
+updateMiniChart('1y');
+// Update last updated time
+updateLastUpdatedTime();
+});
+// Function to update the last updated time
+function updateLastUpdatedTime() {
+const now = new Date();
+const hours = now.getHours().toString().padStart(2, '0');
+const minutes = now.getMinutes().toString().padStart(2, '0');
+const seconds = now.getSeconds().toString().padStart(2, '0');
+document.getElementById('update-time').textContent = `April 3, 2025 ${hours}:${minutes}:${seconds}`;
+}
+function resetTimeButtons() {
+const timeButtons = document.querySelectorAll('#view-1d, #view-1w, #view-1m, #view-3m, #view-1y');
+timeButtons.forEach(btn => {
+btn.classList.remove('bg-primary/20', 'text-white');
+btn.classList.add('bg-slate-700/50', 'text-gray-300');
+});
+}
+// Responsive chart
+window.addEventListener('resize', function() {
+miniChart.resize();
+});
+// Market data content
+const marketData = {
+stocks: {
+indices: [
+{ name: 'NIFTY 50', value: '17,302.70', change: '+29.45', percent: '0.24%', positive: true },
+{ name: 'SENSEX', value: '58,382.70', change: '+15.25', percent: '0.21%', positive: true },
+{ name: 'BANKNIFTY', value: '37,392.70', change: '+29.45', percent: '0.24%', positive: true },
+{ name: 'NIFTY 100', value: '17,892.70', change: '+22.15', percent: '0.21%', positive: true }
+],
+gainers: [
+{ name: 'Tech Mahindra', symbol: 'TM', price: '₹1,286.00', change: '+7.40', percent: '0.64%' },
+{ name: 'Bajaj Auto', symbol: 'BA', price: '₹3,706.75', change: '+49.15', percent: '1.44%' },
+{ name: 'Havells India', symbol: 'HI', price: '₹1,116.70', change: '+14.45', percent: '1.32%' },
+{ name: 'Tata Power', symbol: 'TP', price: '₹190.20', change: '+0.75', percent: '0.39%' }
+],
+watchlist: [
+{ name: 'Reliance Industries Ltd.', price: '₹2,254.60', change: '+3.22%', positive: true },
+{ name: 'ITC (India)', price: '₹389.60', change: '+3.22%', positive: true },
+{ name: 'Tata Energy', price: '₹220.60', change: '-1.50%', positive: false }
+]
+},
+mutualFunds: {
+indices: [
+{ name: 'Equity Funds', value: '1,302.70', change: '+9.45', percent: '0.74%', positive: true },
+{ name: 'Debt Funds', value: '2,382.70', change: '+5.25', percent: '0.21%', positive: true },
+{ name: 'Hybrid Funds', value: '1,392.70', change: '+19.45', percent: '1.24%', positive: true },
+{ name: 'Index Funds', value: '3,892.70', change: '+32.15', percent: '0.81%', positive: true }
+],
+gainers: [
+{ name: 'SBI Blue Chip Fund', symbol: 'SB', price: '₹86.00', change: '+1.40', percent: '1.64%' },
+{ name: 'Axis Midcap Fund', symbol: 'AM', price: '₹106.75', change: '+2.15', percent: '2.04%' },
+{ name: 'HDFC Balanced Fund', symbol: 'HB', price: '₹216.70', change: '+4.45', percent: '2.12%' },
+{ name: 'ICICI Pru Value Fund', symbol: 'IP', price: '₹90.20', change: '+1.75', percent: '1.99%' }
+],
+watchlist: [
+{ name: 'Mirae Asset Large Cap', price: '₹84.60', change: '+1.22%', positive: true },
+{ name: 'Kotak Emerging Equity', price: '₹79.60', change: '+2.12%', positive: true },
+{ name: 'Aditya Birla SL Equity', price: '₹120.60', change: '-0.50%', positive: false }
+]
+},
+etfs: {
+indices: [
+{ name: 'Equity ETFs', value: '2,302.70', change: '+19.45', percent: '0.84%', positive: true },
+{ name: 'Bond ETFs', value: '1,382.70', change: '+5.25', percent: '0.41%', positive: true },
+{ name: 'Commodity ETFs', value: '2,392.70', change: '+29.45', percent: '1.24%', positive: true },
+{ name: 'Sector ETFs', value: '1,892.70', change: '+12.15', percent: '0.61%', positive: true }
+],
+gainers: [
+{ name: 'Nippon India ETF', symbol: 'NE', price: '₹286.00', change: '+7.40', percent: '2.64%' },
+{ name: 'SBI ETF Nifty 50', symbol: 'SN', price: '₹206.75', change: '+4.15', percent: '2.04%' },
+{ name: 'HDFC Sensex ETF', symbol: 'HS', price: '₹516.70', change: '+10.45', percent: '2.02%' },
+{ name: 'ICICI Pru Gold ETF', symbol: 'IG', price: '₹490.20', change: '+9.75', percent: '1.99%' }
+],
+watchlist: [
+{ name: 'Kotak Banking ETF', price: '₹354.60', change: '+2.22%', positive: true },
+{ name: 'Motilal Oswal NASDAQ ETF', price: '₹189.60', change: '+3.22%', positive: true },
+{ name: 'UTI Nifty ETF', price: '₹120.60', change: '-0.50%', positive: false }
+]
+},
+commodities: {
+indices: [
+{ name: 'Gold', value: '2,302.70', change: '+19.45', percent: '0.84%', positive: true },
+{ name: 'Silver', value: '28.70', change: '+0.25', percent: '0.91%', positive: true },
+{ name: 'Crude Oil', value: '82.70', change: '-1.45', percent: '1.74%', positive: false },
+{ name: 'Natural Gas', value: '2.92', change: '+0.15', percent: '5.21%', positive: true }
+],
+gainers: [
+{ name: 'Copper', symbol: 'CU', price: '₹786.00', change: '+17.40', percent: '2.24%' },
+{ name: 'Zinc', symbol: 'ZN', price: '₹306.75', change: '+8.15', percent: '2.74%' },
+{ name: 'Aluminum', symbol: 'AL', price: '₹216.70', change: '+4.45', percent: '2.12%' },
+{ name: 'Cotton', symbol: 'CT', price: '₹90.20', change: '+1.75', percent: '1.99%' }
+],
+watchlist: [
+{ name: 'Gold Mini', price: '₹5,854.60', change: '+1.22%', positive: true },
+{ name: 'Silver Micro', price: '₹79.60', change: '+2.12%', positive: true },
+{ name: 'Crude Oil Mini', price: '₹6,120.60', change: '-1.50%', positive: false }
+]
+},
+forex: {
+indices: [
+{ name: 'USD/INR', value: '83.70', change: '-0.15', percent: '0.18%', positive: false },
+{ name: 'EUR/INR', value: '90.70', change: '+0.25', percent: '0.28%', positive: true },
+{ name: 'GBP/INR', value: '105.70', change: '+0.45', percent: '0.44%', positive: true },
+{ name: 'JPY/INR', value: '0.55', change: '+0.01', percent: '1.21%', positive: true }
+],
+gainers: [
+{ name: 'EUR/USD', symbol: 'EU', price: '1.086', change: '+0.004', percent: '0.34%' },
+{ name: 'GBP/USD', symbol: 'GU', price: '1.267', change: '+0.008', percent: '0.64%' },
+{ name: 'AUD/USD', symbol: 'AU', price: '0.656', change: '+0.005', percent: '0.72%' },
+{ name: 'USD/CAD', symbol: 'UC', price: '1.356', change: '-0.004', percent: '0.29%' }
+],
+watchlist: [
+{ name: 'USD/INR', price: '83.70', change: '-0.18%', positive: false },
+{ name: 'EUR/USD', price: '1.086', change: '+0.34%', positive: true },
+{ name: 'GBP/USD', price: '1.267', change: '+0.64%', positive: true }
+]
+},
+crypto: {
+indices: [
+{ name: 'Bitcoin', value: '67,302.70', change: '+1,945', percent: '2.84%', positive: true },
+{ name: 'Ethereum', value: '3,382.70', change: '+125.25', percent: '3.91%', positive: true },
+{ name: 'Binance Coin', value: '592.70', change: '+19.45', percent: '3.24%', positive: true },
+{ name: 'Solana', value: '142.70', change: '+7.15', percent: '5.21%', positive: true }
+],
+gainers: [
+{ name: 'Cardano', symbol: 'CA', price: '₹0.46', change: '+0.04', percent: '9.64%' },
+{ name: 'Polkadot', symbol: 'PD', price: '₹6.75', change: '+0.45', percent: '7.04%' },
+{ name: 'Avalanche', symbol: 'AV', price: '₹36.70', change: '+2.45', percent: '6.12%' },
+{ name: 'Chainlink', symbol: 'CL', price: '₹15.20', change: '+0.85', percent: '5.99%' }
+],
+watchlist: [
+{ name: 'Bitcoin', price: '₹67,302.70', change: '+2.84%', positive: true },
+{ name: 'Ethereum', price: '₹3,382.70', change: '+3.91%', positive: true },
+{ name: 'Dogecoin', price: '₹0.12', change: '-1.50%', positive: false }
+]
+},
+bonds: {
+indices: [
+{ name: 'Govt. 10Y', value: '7.02', change: '-0.05', percent: '0.74%', positive: false },
+{ name: 'Govt. 5Y', value: '6.82', change: '-0.03', percent: '0.41%', positive: false },
+{ name: 'Corp. AAA', value: '7.92', change: '-0.04', percent: '0.54%', positive: false },
+{ name: 'T-Bills 91D', value: '6.52', change: '-0.02', percent: '0.31%', positive: false }
+],
+gainers: [
+{ name: 'HDFC Corp Bond', symbol: 'HC', price: '₹26.00', change: '+0.40', percent: '1.54%' },
+{ name: 'SBI Debt Fund', symbol: 'SD', price: '₹36.75', change: '+0.45', percent: '1.24%' },
+{ name: 'ICICI Bond Fund', symbol: 'IB', price: '₹56.70', change: '+0.65', percent: '1.12%' },
+{ name: 'Kotak Bond Fund', symbol: 'KB', price: '₹40.20', change: '+0.45', percent: '1.09%' }
+],
+watchlist: [
+{ name: 'Govt. 10Y Bond', price: '₹102.60', change: '-0.72%', positive: false },
+{ name: 'HDFC Corp Bond', price: '₹26.00', change: '+1.54%', positive: true },
+{ name: 'SBI Debt Fund', price: '₹36.75', change: '+1.24%', positive: true }
+]
+},
+global: {
+indices: [
+{ name: 'S&P 500', value: '5,218.19', change: '+50.45', percent: '0.98%', positive: true },
+{ name: 'NASDAQ', value: '16,429.45', change: '+203.25', percent: '1.25%', positive: true },
+{ name: 'DOW JONES', value: '38,764.31', change: '-45.45', percent: '0.12%', positive: false },
+{ name: 'FTSE 100', value: '8,145.63', change: '+36.15', percent: '0.45%', positive: true }
+],
+gainers: [
+{ name: 'NVIDIA Corp', symbol: 'NV', price: '$942.89', change: '+41.40', percent: '4.58%' },
+{ name: 'Tesla Inc', symbol: 'TS', price: '$178.21', change: '+6.75', percent: '3.92%' },
+{ name: 'Advanced Micro Devices', symbol: 'AM', price: '$164.78', change: '+5.45', percent: '3.45%' },
+{ name: 'Apple Inc', symbol: 'AP', price: '$189.98', change: '+5.25', percent: '2.87%' }
+],
+watchlist: [
+{ name: 'Microsoft Corp', price: '$425.52', change: '+1.23%', positive: true },
+{ name: 'Amazon.com Inc', price: '$182.30', change: '-0.45%', positive: false },
+{ name: 'Alphabet Inc', price: '$176.89', change: '+0.78%', positive: true }
+]
+}
+};
+// Function to update market data content
+function updateMarketData(category) {
+// Update indices
+const data = marketData[category];
+const indicesContainer = document.querySelector('.col-span-2 .bg-slate-800\\/50 .grid');
+if (indicesContainer && data.indices) {
+let indicesHTML = '';
+data.indices.forEach(index => {
+indicesHTML += `
+<div class="market-card p-4 rounded-lg">
+<div class="text-sm text-gray-400 mb-1">${index.name}</div>
+<div class="text-xl font-semibold">${index.value}</div>
+<div class="flex items-center ${index.positive ? 'positive-change' : 'negative-change'} text-sm">
+<i class="ri-arrow-${index.positive ? 'up' : 'down'}-line mr-1"></i>
+<span>${index.change} (${index.percent})</span>
+</div>
+</div>
+`;
+});
+indicesContainer.innerHTML = indicesHTML;
+}
+// Update gainers
+const gainersContainer = document.querySelector('.col-span-2 .bg-slate-800\\/50:nth-of-type(2) .grid');
+if (gainersContainer && data.gainers) {
+let gainersHTML = '';
+data.gainers.forEach(gainer => {
+gainersHTML += `
+<div class="market-card p-4 rounded-lg">
+<div class="flex items-center mb-2">
+<div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+<span class="text-blue-800 text-xs font-bold">${gainer.symbol}</span>
+</div>
+<div class="text-sm font-medium">${gainer.name}</div>
+</div>
+<div class="text-lg font-semibold">${gainer.price}</div>
+<div class="flex items-center positive-change text-sm">
+<i class="ri-arrow-up-line mr-1"></i>
+<span>${gainer.change} (${gainer.percent})</span>
+</div>
+</div>
+`;
+});
+gainersContainer.innerHTML = gainersHTML;
+}
+// Update watchlist
+const watchlistContainer = document.querySelector('.col-span-1 .bg-slate-800\\/50 .space-y-4');
+if (watchlistContainer && data.watchlist) {
+let watchlistHTML = '';
+data.watchlist.forEach(item => {
+watchlistHTML += `
+<div class="watchlist-item p-2 rounded-lg transition-all duration-200">
+<div class="flex justify-between items-center">
+<div>
+<div class="font-medium">${item.name}</div>
+</div>
+<div class="text-right">
+<div class="font-semibold">${item.price}</div>
+<div class="${item.positive ? 'positive-change' : 'negative-change'} text-sm">${item.change}</div>
+</div>
+</div>
+</div>
+`;
+});
+watchlistContainer.innerHTML = watchlistHTML;
+}
+}
+// Tab switching
+const tabButtons = document.querySelectorAll('[class*="py-3 px-4"]');
+tabButtons.forEach(button => {
+button.addEventListener('click', function() {
+// Remove active class from all tabs
+tabButtons.forEach(btn => {
+btn.classList.remove('tab-active');
+btn.classList.add('text-gray-300');
+btn.classList.remove('text-primary');
+});
+// Add active class to clicked tab
+this.classList.add('tab-active');
+this.classList.remove('text-gray-300');
+this.classList.add('text-primary');
+// Update content based on selected tab
+const tabId = this.id;
+if (tabId === 'tab-stocks') {
+updateMarketData('stocks');
+fetchAndDisplayStockList('stocks');
+} else if (tabId === 'tab-mutual-funds') {
+updateMarketData('mutualFunds');
+fetchAndDisplayStockList('mutualFunds');
+} else if (tabId === 'tab-etfs') {
+updateMarketData('etfs');
+fetchAndDisplayStockList('etfs');
+} else if (tabId === 'tab-commodities') {
+updateMarketData('commodities');
+fetchAndDisplayStockList('commodities');
+} else if (tabId === 'tab-forex') {
+updateMarketData('forex');
+fetchAndDisplayStockList('forex');
+} else if (tabId === 'tab-crypto') {
+updateMarketData('crypto');
+fetchAndDisplayStockList('crypto');
+} else if (tabId === 'tab-bonds') {
+updateMarketData('bonds');
+fetchAndDisplayStockList('bonds');
+} else if (tabId === 'tab-global') {
+updateMarketData('global');
+fetchAndDisplayStockList('global');
+}
+});
+});
+// Watchlist star toggle
+const watchlistButtons = document.querySelectorAll('button i.ri-star-line');
+watchlistButtons.forEach(button => {
+button.addEventListener('click', function() {
+if (this.classList.contains('ri-star-line')) {
+this.classList.remove('ri-star-line');
+this.classList.add('ri-star-fill');
+this.classList.add('text-yellow-400');
+} else {
+this.classList.remove('ri-star-fill');
+this.classList.remove('text-yellow-400');
+this.classList.add('ri-star-line');
+}
+});
+});
+// Make watchlist items clickable to update the stock chart
+const watchlistItems = document.querySelectorAll('.watchlist-item');
+watchlistItems.forEach(item => {
+item.addEventListener('click', function() {
+// Get the stock name from the clicked item
+const stockName = this.querySelector('.font-medium').textContent;
+// Highlight the selected item
+watchlistItems.forEach(i => i.classList.remove('bg-slate-700/30'));
+this.classList.add('bg-slate-700/30');
+// Update chart title
+document.querySelector('#miniStockChart').parentElement.querySelector('h2').textContent = 'Stock Performance: ' + stockName;
+// Simulate real-time data updates
+updateRealTimeStockData(stockName);
+});
+});
+// Function to simulate real-time stock data updates
+function updateRealTimeStockData(stockName) {
+// Show loading indicator
+const miniChartDom = document.getElementById('miniStockChart');
+miniChartDom.innerHTML = '<div class="flex items-center justify-center h-full"><div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div></div>';
+// Update the last updated time
+const now = new Date();
+const hours = now.getHours().toString().padStart(2, '0');
+const minutes = now.getMinutes().toString().padStart(2, '0');
+document.getElementById('update-time').textContent = `April 3, 2025 ${hours}:${minutes}`;
+// Simulate API fetch delay
+setTimeout(() => {
+// Generate realistic stock data based on the stock name
+// Different stocks will have different patterns
+let baseValue = 0;
+let volatility = 0;
+if (stockName.includes('Reliance')) {
+baseValue = 2250;
+volatility = 30;
+} else if (stockName.includes('ITC')) {
+baseValue = 390;
+volatility = 10;
+} else if (stockName.includes('Tata')) {
+baseValue = 220;
+volatility = 15;
+} else if (stockName.includes('Microsoft')) {
+baseValue = 425;
+volatility = 20;
+} else if (stockName.includes('Amazon')) {
+baseValue = 180;
+volatility = 25;
+} else if (stockName.includes('Alphabet')) {
+baseValue = 175;
+volatility = 18;
+} else {
+baseValue = 1000;
+volatility = 50;
+}
+// Generate data for different time periods with realistic trends
+const generateTrendData = (base, vol, points, trend = 0) => {
+let result = [];
+let value = base;
+for (let i = 0; i < points; i++) {
+// Add some randomness but maintain the trend
+const change = (Math.random() - 0.5 + trend * 0.1) * vol;
+value += change;
+result.push(value.toFixed(2));
+}
+return result;
+};
+// Update data for all time periods with slightly different trends
+stockChartData['1d'].values = generateTrendData(baseValue, volatility * 0.2, 8, 1);
+stockChartData['1w'].values = generateTrendData(baseValue * 0.98, volatility * 0.5, 8, 2);
+stockChartData['1m'].values = generateTrendData(baseValue * 0.95, volatility, 4, 3);
+stockChartData['3m'].values = generateTrendData(baseValue * 0.9, volatility * 1.5, 4, 2);
+stockChartData['1y'].values = generateTrendData(baseValue * 0.8, volatility * 3, 7, 4);
+// Get active time period
+const activeButton = document.querySelector('.bg-primary\\/20.text-white');
+const activePeriod = activeButton.id.replace('view-', '');
+// Update the chart with new data
+updateMiniChart(activePeriod);
+// Set up interval for real-time updates (every 5 seconds)
+clearInterval(window.stockUpdateInterval);
+window.stockUpdateInterval = setInterval(() => {
+// Small real-time updates for the active period
+const activePeriod = document.querySelector('.bg-primary\\/20.text-white').id.replace('view-', '');
+const data = stockChartData[activePeriod];
+// Update only the last value with a small change
+const lastValue = parseFloat(data.values[data.values.length - 1]);
+const smallChange = (Math.random() - 0.5) * volatility * 0.1;
+data.values[data.values.length - 1] = (lastValue + smallChange).toFixed(2);
+// Update the last updated time
+const now = new Date();
+const hours = now.getHours().toString().padStart(2, '0');
+const minutes = now.getMinutes().toString().padStart(2, '0');
+const seconds = now.getSeconds().toString().padStart(2, '0');
+document.getElementById('update-time').textContent = `April 3, 2025 ${hours}:${minutes}:${seconds}`;
+// Update chart
+updateMiniChart(activePeriod);
+}, 5000);
+}, 800);
+}
+// Function to fetch and display stock list for a category
+function fetchAndDisplayStockList(category) {
+// Show loading indicator
+const stockListBody = document.getElementById('stock-list-body');
+stockListBody.innerHTML = `
+<tr>
+<td colspan="4" class="py-8 text-center">
+<div class="flex items-center justify-center">
+<div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+</div>
+</td>
+</tr>
+`;
+// Simulate API fetch delay
+setTimeout(() => {
+// Generate stock list based on category
+let stocks = [];
+// Use existing data from marketData or generate more comprehensive data
+if (category === 'stocks') {
+stocks = [
+{ name: 'Tata Steel Limited', symbol: 'TS', price: '₹254.60', change: '+1.32%', positive: true, color: 'blue' },
+{ name: 'Vedanta', symbol: 'VD', price: '₹530.60', change: '+1.32%', positive: true, color: 'green' },
+{ name: 'Gail (India)', symbol: 'GI', price: '₹480.60', change: '-0.32%', positive: false, color: 'yellow' },
+{ name: 'Reliance Industries Ltd.', symbol: 'RI', price: '₹2,254.60', change: '+3.22%', positive: true, color: 'red' },
+{ name: 'ITC (India)', symbol: 'IT', price: '₹389.60', change: '+3.22%', positive: true, color: 'purple' },
+{ name: 'Tata Energy', symbol: 'TE', price: '₹220.60', change: '-1.50%', positive: false, color: 'blue' },
+{ name: 'Infosys', symbol: 'IN', price: '₹1,456.30', change: '+0.87%', positive: true, color: 'indigo' },
+{ name: 'HDFC Bank', symbol: 'HB', price: '₹1,678.45', change: '+1.12%', positive: true, color: 'green' },
+{ name: 'Bharti Airtel', symbol: 'BA', price: '₹876.20', change: '-0.45%', positive: false, color: 'orange' },
+{ name: 'Wipro', symbol: 'WP', price: '₹432.15', change: '+2.34%', positive: true, color: 'teal' }
+];
+} else if (category === 'mutualFunds') {
+stocks = [
+{ name: 'SBI Blue Chip Fund', symbol: 'SB', price: '₹86.00', change: '+1.64%', positive: true, color: 'blue' },
+{ name: 'Axis Midcap Fund', symbol: 'AM', price: '₹106.75', change: '+2.04%', positive: true, color: 'green' },
+{ name: 'HDFC Balanced Fund', symbol: 'HB', price: '₹216.70', change: '+2.12%', positive: true, color: 'red' },
+{ name: 'ICICI Pru Value Fund', symbol: 'IP', price: '₹90.20', change: '+1.99%', positive: true, color: 'yellow' },
+{ name: 'Mirae Asset Large Cap', symbol: 'ML', price: '₹84.60', change: '+1.22%', positive: true, color: 'purple' },
+{ name: 'Kotak Emerging Equity', symbol: 'KE', price: '₹79.60', change: '+2.12%', positive: true, color: 'indigo' },
+{ name: 'Aditya Birla SL Equity', symbol: 'AB', price: '₹120.60', change: '-0.50%', positive: false, color: 'blue' },
+{ name: 'DSP Midcap Fund', symbol: 'DM', price: '₹92.35', change: '+1.78%', positive: true, color: 'green' },
+{ name: 'Franklin India Prima Fund', symbol: 'FP', price: '₹1,245.80', change: '+0.95%', positive: true, color: 'orange' },
+{ name: 'Nippon India Growth Fund', symbol: 'NG', price: '₹1,567.25', change: '-0.32%', positive: false, color: 'teal' }
+];
+} else if (category === 'etfs') {
+stocks = [
+{ name: 'Nippon India ETF', symbol: 'NE', price: '₹286.00', change: '+2.64%', positive: true, color: 'blue' },
+{ name: 'SBI ETF Nifty 50', symbol: 'SN', price: '₹206.75', change: '+2.04%', positive: true, color: 'green' },
+{ name: 'HDFC Sensex ETF', symbol: 'HS', price: '₹516.70', change: '+2.02%', positive: true, color: 'red' },
+{ name: 'ICICI Pru Gold ETF', symbol: 'IG', price: '₹490.20', change: '+1.99%', positive: true, color: 'yellow' },
+{ name: 'Kotak Banking ETF', symbol: 'KB', price: '₹354.60', change: '+2.22%', positive: true, color: 'purple' },
+{ name: 'Motilal Oswal NASDAQ ETF', symbol: 'MN', price: '₹189.60', change: '+3.22%', positive: true, color: 'indigo' },
+{ name: 'UTI Nifty ETF', symbol: 'UN', price: '₹120.60', change: '-0.50%', positive: false, color: 'blue' },
+{ name: 'Edelweiss ETF - Nifty Bank', symbol: 'EN', price: '₹345.75', change: '+1.45%', positive: true, color: 'green' },
+{ name: 'Axis Gold ETF', symbol: 'AG', price: '₹4,567.90', change: '+0.75%', positive: true, color: 'orange' },
+{ name: 'IDFC Nifty ETF', symbol: 'IN', price: '₹156.25', change: '-0.22%', positive: false, color: 'teal' }
+];
+} else if (category === 'commodities') {
+stocks = [
+{ name: 'Gold', symbol: 'GD', price: '₹62,302.70', change: '+0.84%', positive: true, color: 'yellow' },
+{ name: 'Silver', symbol: 'SL', price: '₹78,382.70', change: '+0.91%', positive: true, color: 'gray' },
+{ name: 'Crude Oil', symbol: 'CO', price: '₹6,392.70', change: '-1.74%', positive: false, color: 'black' },
+{ name: 'Natural Gas', symbol: 'NG', price: '₹215.92', change: '+5.21%', positive: true, color: 'blue' },
+{ name: 'Copper', symbol: 'CU', price: '₹786.00', change: '+2.24%', positive: true, color: 'orange' },
+{ name: 'Zinc', symbol: 'ZN', price: '₹306.75', change: '+2.74%', positive: true, color: 'gray' },
+{ name: 'Aluminum', symbol: 'AL', price: '₹216.70', change: '+2.12%', positive: true, color: 'silver' },
+{ name: 'Cotton', symbol: 'CT', price: '₹90.20', change: '+1.99%', positive: true, color: 'white' },
+{ name: 'Gold Mini', symbol: 'GM', price: '₹5,854.60', change: '+1.22%', positive: true, color: 'yellow' },
+{ name: 'Silver Micro', symbol: 'SM', price: '₹79.60', change: '+2.12%', positive: true, color: 'gray' }
+];
+} else if (category === 'forex') {
+stocks = [
+{ name: 'USD/INR', symbol: 'UI', price: '83.70', change: '-0.18%', positive: false, color: 'green' },
+{ name: 'EUR/INR', symbol: 'EI', price: '90.70', change: '+0.28%', positive: true, color: 'blue' },
+{ name: 'GBP/INR', symbol: 'GI', price: '105.70', change: '+0.44%', positive: true, color: 'red' },
+{ name: 'JPY/INR', symbol: 'JI', price: '0.55', change: '+1.21%', positive: true, color: 'white' },
+{ name: 'EUR/USD', symbol: 'EU', price: '1.086', change: '+0.34%', positive: true, color: 'blue' },
+{ name: 'GBP/USD', symbol: 'GU', price: '1.267', change: '+0.64%', positive: true, color: 'red' },
+{ name: 'AUD/USD', symbol: 'AU', price: '0.656', change: '+0.72%', positive: true, color: 'yellow' },
+{ name: 'USD/CAD', symbol: 'UC', price: '1.356', change: '-0.29%', positive: false, color: 'red' },
+{ name: 'USD/JPY', symbol: 'UJ', price: '151.45', change: '+0.15%', positive: true, color: 'green' },
+{ name: 'NZD/USD', symbol: 'NU', price: '0.597', change: '-0.42%', positive: false, color: 'black' }
+];
+} else if (category === 'crypto') {
+stocks = [
+{ name: 'Bitcoin', symbol: 'BT', price: '₹67,302.70', change: '+2.84%', positive: true, color: 'orange' },
+{ name: 'Ethereum', symbol: 'ET', price: '₹3,382.70', change: '+3.91%', positive: true, color: 'blue' },
+{ name: 'Binance Coin', symbol: 'BN', price: '₹592.70', change: '+3.24%', positive: true, color: 'yellow' },
+{ name: 'Solana', symbol: 'SL', price: '₹142.70', change: '+5.21%', positive: true, color: 'purple' },
+{ name: 'Cardano', symbol: 'CA', price: '₹0.46', change: '+9.64%', positive: true, color: 'blue' },
+{ name: 'Polkadot', symbol: 'PD', price: '₹6.75', change: '+7.04%', positive: true, color: 'pink' },
+{ name: 'Avalanche', symbol: 'AV', price: '₹36.70', change: '+6.12%', positive: true, color: 'red' },
+{ name: 'Chainlink', symbol: 'CL', price: '₹15.20', change: '+5.99%', positive: true, color: 'blue' },
+{ name: 'Dogecoin', symbol: 'DG', price: '₹0.12', change: '-1.50%', positive: false, color: 'yellow' },
+{ name: 'Shiba Inu', symbol: 'SI', price: '₹0.000021', change: '+4.32%', positive: true, color: 'orange' }
+];
+} else if (category === 'bonds') {
+stocks = [
+{ name: 'Govt. 10Y Bond', symbol: 'G10', price: '₹102.60', change: '-0.72%', positive: false, color: 'blue' },
+{ name: 'Govt. 5Y', symbol: 'G5', price: '₹101.82', change: '-0.41%', positive: false, color: 'green' },
+{ name: 'Corp. AAA', symbol: 'CA', price: '₹99.92', change: '-0.54%', positive: false, color: 'red' },
+{ name: 'T-Bills 91D', symbol: 'TB', price: '₹99.52', change: '-0.31%', positive: false, color: 'yellow' },
+{ name: 'HDFC Corp Bond', symbol: 'HC', price: '₹26.00', change: '+1.54%', positive: true, color: 'blue' },
+{ name: 'SBI Debt Fund', symbol: 'SD', price: '₹36.75', change: '+1.24%', positive: true, color: 'green' },
+{ name: 'ICICI Bond Fund', symbol: 'IB', price: '₹56.70', change: '+1.12%', positive: true, color: 'red' },
+{ name: 'Kotak Bond Fund', symbol: 'KB', price: '₹40.20', change: '+1.09%', positive: true, color: 'yellow' },
+{ name: 'Axis Banking & PSU Debt', symbol: 'AB', price: '₹21.45', change: '+0.85%', positive: true, color: 'purple' },
+{ name: 'Franklin India Savings Fund', symbol: 'FS', price: '₹43.78', change: '+0.62%', positive: true, color: 'indigo' }
+];
+} else if (category === 'global') {
+stocks = [
+{ name: 'S&P 500', symbol: 'SP', price: '$5,218.19', change: '+0.98%', positive: true, color: 'blue' },
+{ name: 'NASDAQ', symbol: 'NQ', price: '$16,429.45', change: '+1.25%', positive: true, color: 'green' },
+{ name: 'DOW JONES', symbol: 'DJ', price: '$38,764.31', change: '-0.12%', positive: false, color: 'red' },
+{ name: 'FTSE 100', symbol: 'FT', price: '£8,145.63', change: '+0.45%', positive: true, color: 'blue' },
+{ name: 'NVIDIA Corp', symbol: 'NV', price: '$942.89', change: '+4.58%', positive: true, color: 'green' },
+{ name: 'Tesla Inc', symbol: 'TS', price: '$178.21', change: '+3.92%', positive: true, color: 'red' },
+{ name: 'Advanced Micro Devices', symbol: 'AM', price: '$164.78', change: '+3.45%', positive: true, color: 'purple' },
+{ name: 'Apple Inc', symbol: 'AP', price: '$189.98', change: '+2.87%', positive: true, color: 'silver' },
+{ name: 'Microsoft Corp', symbol: 'MS', price: '$425.52', change: '+1.23%', positive: true, color: 'blue' },
+{ name: 'Amazon.com Inc', symbol: 'AZ', price: '$182.30', change: '-0.45%', positive: false, color: 'orange' }
+];
+}
+// Generate HTML for stock list
+let stockListHTML = '';
+stocks.forEach(stock => {
+stockListHTML += `
+<tr class="border-t border-gray-700 stock-item" data-stock="${stock.name}">
+<td class="py-4 px-4">
+<div class="flex items-center">
+<div class="w-8 h-8 bg-${stock.color}-100 rounded-full flex items-center justify-center mr-3">
+<span class="text-${stock.color}-800 text-xs font-bold">${stock.symbol}</span>
+</div>
+<div>${stock.name}</div>
+</div>
+</td>
+<td class="py-4 px-4 text-center">
+<div class="font-semibold">${stock.price}</div>
+</td>
+<td class="py-4 px-4 text-center">
+<div class="${stock.positive ? 'positive-change' : 'negative-change'} text-sm">${stock.change}</div>
+</td>
+<td class="py-4 px-4 text-center">
+<button class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-primary">
+<i class="ri-star-line ri-lg"></i>
+</button>
+</td>
+</tr>
+`;
+});
+// Update the stock list table
+stockListBody.innerHTML = stockListHTML;
+// Add click event to each stock item
+const stockItems = document.querySelectorAll('.stock-item');
+stockItems.forEach(item => {
+item.addEventListener('click', function() {
+// Get the stock name from the clicked item
+const stockName = this.getAttribute('data-stock');
+// Highlight the selected item
+stockItems.forEach(i => i.classList.remove('bg-slate-700/30'));
+this.classList.add('bg-slate-700/30');
+// Update chart title
+document.querySelector('#miniStockChart').parentElement.querySelector('h2').textContent = 'Stock Performance: ' + stockName;
+// Update the chart with the selected stock data
+updateRealTimeStockData(stockName);
+});
+});
+// Add click event to watchlist buttons
+const watchlistButtons = document.querySelectorAll('#stock-list-body button i.ri-star-line');
+watchlistButtons.forEach(button => {
+button.addEventListener('click', function(e) {
+e.stopPropagation(); // Prevent triggering the row click
+if (this.classList.contains('ri-star-line')) {
+this.classList.remove('ri-star-line');
+this.classList.add('ri-star-fill');
+this.classList.add('text-yellow-400');
+} else {
+this.classList.remove('ri-star-fill');
+this.classList.remove('text-yellow-400');
+this.classList.add('ri-star-line');
+}
+});
+});
+}, 800);
+}
+// Initialize the stock list with stocks category
+document.addEventListener('DOMContentLoaded', function() {
+fetchAndDisplayStockList('stocks');
+// View All Gainers functionality
+const viewAllGainersBtn = document.getElementById('view-all-gainers');
+const gainersContainer = document.getElementById('gainers-container');
+let isShowingAllGainers = false;
+let currentPage = 1;
+const itemsPerPage = 8;
+const allGainersData = [
+{ name: 'Tech Mahindra', symbol: 'TM', price: '₹1,286.00', change: '+7.40', percent: '0.64%', color: 'blue' },
+{ name: 'Bajaj Auto', symbol: 'BA', price: '₹3,706.75', change: '+49.15', percent: '1.44%', color: 'indigo' },
+{ name: 'Havells India', symbol: 'HI', price: '₹1,116.70', change: '+14.45', percent: '1.32%', color: 'red' },
+{ name: 'Tata Power', symbol: 'TP', price: '₹190.20', change: '+0.75', percent: '0.39%', color: 'blue' },
+{ name: 'Adani Ports', symbol: 'AP', price: '₹876.50', change: '+23.40', percent: '2.74%', color: 'green' },
+{ name: 'Bharti Airtel', symbol: 'BA', price: '₹1,056.30', change: '+18.75', percent: '1.81%', color: 'red' },
+{ name: 'Asian Paints', symbol: 'AS', price: '₹3,245.60', change: '+42.30', percent: '1.32%', color: 'purple' },
+{ name: 'Titan Company', symbol: 'TC', price: '₹2,876.45', change: '+35.80', percent: '1.26%', color: 'yellow' },
+{ name: 'Maruti Suzuki', symbol: 'MS', price: '₹10,456.75', change: '+124.90', percent: '1.21%', color: 'blue' },
+{ name: 'Hindustan Unilever', symbol: 'HU', price: '₹2,567.30', change: '+28.45', percent: '1.12%', color: 'indigo' },
+{ name: 'Larsen & Toubro', symbol: 'LT', price: '₹2,987.65', change: '+32.40', percent: '1.10%', color: 'green' },
+{ name: 'HDFC Bank', symbol: 'HB', price: '₹1,678.90', change: '+17.65', percent: '1.06%', color: 'red' },
+{ name: 'Infosys Ltd', symbol: 'IN', price: '₹1,456.25', change: '+16.80', percent: '1.17%', color: 'blue' },
+{ name: 'Wipro Ltd', symbol: 'WP', price: '₹432.60', change: '+4.85', percent: '1.13%', color: 'teal' },
+{ name: 'TCS Ltd', symbol: 'TC', price: '₹3,542.75', change: '+38.90', percent: '1.11%', color: 'indigo' },
+{ name: 'Sun Pharma', symbol: 'SP', price: '₹1,124.50', change: '+12.35', percent: '1.11%', color: 'orange' },
+{ name: 'Kotak Mahindra Bank', symbol: 'KM', price: '₹1,845.30', change: '+19.75', percent: '1.08%', color: 'blue' },
+{ name: 'ICICI Bank', symbol: 'IC', price: '₹956.40', change: '+10.25', percent: '1.08%', color: 'orange' },
+{ name: 'Axis Bank', symbol: 'AX', price: '₹1,023.65', change: '+10.85', percent: '1.07%', color: 'purple' },
+{ name: 'Reliance Industries', symbol: 'RI', price: '₹2,456.80', change: '+25.45', percent: '1.05%', color: 'blue' },
+{ name: 'HCL Technologies', symbol: 'HC', price: '₹1,234.55', change: '+12.65', percent: '1.04%', color: 'green' },
+{ name: 'Nestle India', symbol: 'NI', price: '₹2,345.70', change: '+23.80', percent: '1.03%', color: 'red' },
+{ name: 'ITC Limited', symbol: 'IT', price: '₹456.35', change: '+4.55', percent: '1.01%', color: 'yellow' },
+{ name: 'Mahindra & Mahindra', symbol: 'MM', price: '₹1,567.90', change: '+15.45', percent: '1.00%', color: 'indigo' }
+];
+// Function to render gainers with pagination
+function renderGainers(isExpanded = false) {
+// Show loading state
+gainersContainer.innerHTML = `
+<div class="col-span-4 py-8 text-center">
+<div class="flex items-center justify-center">
+<div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+</div>
+</div>
+`;
+// Simulate API fetch delay
+setTimeout(() => {
+let gainersToShow = [];
+if (isExpanded) {
+// Calculate start and end index for current page
+const startIndex = (currentPage - 1) * itemsPerPage;
+const endIndex = Math.min(startIndex + itemsPerPage, allGainersData.length);
+gainersToShow = allGainersData.slice(startIndex, endIndex);
+} else {
+// Just show first 4 items when collapsed
+gainersToShow = allGainersData.slice(0, 4);
+}
+let gainersHTML = '';
+gainersToShow.forEach((gainer, index) => {
+gainersHTML += `
+<div class="market-card p-4 rounded-lg opacity-0 transform translate-y-4" style="transition-delay: ${index * 50}ms">
+<div class="flex items-center mb-2">
+<div class="w-8 h-8 bg-${gainer.color}-100 rounded-full flex items-center justify-center mr-2">
+<span class="text-${gainer.color}-800 text-xs font-bold">${gainer.symbol}</span>
+</div>
+<div class="text-sm font-medium">${gainer.name}</div>
+</div>
+<div class="text-lg font-semibold">${gainer.price}</div>
+<div class="flex items-center positive-change text-sm">
+<i class="ri-arrow-up-line mr-1"></i>
+<span>${gainer.change} (${gainer.percent})</span>
+</div>
+</div>
+`;
+});
+// Add pagination controls if expanded
+if (isExpanded) {
+const totalPages = Math.ceil(allGainersData.length / itemsPerPage);
+gainersHTML += `
+<div class="col-span-4 mt-6 flex justify-center items-center space-x-2">
+<button id="prev-page" class="px-3 py-1 bg-slate-700/50 hover:bg-primary/20 text-gray-300 !rounded-button whitespace-nowrap ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}">
+<i class="ri-arrow-left-s-line"></i>
+</button>
+<span class="text-sm text-gray-300">Page ${currentPage} of ${totalPages}</span>
+<button id="next-page" class="px-3 py-1 bg-slate-700/50 hover:bg-primary/20 text-gray-300 !rounded-button whitespace-nowrap ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}">
+<i class="ri-arrow-right-s-line"></i>
+</button>
+</div>
+`;
+}
+gainersContainer.innerHTML = gainersHTML;
+if (isExpanded) {
+// Configure container for expanded view
+gainersContainer.classList.remove('md:grid-cols-4');
+gainersContainer.classList.add('md:grid-cols-4', 'lg:grid-cols-4');
+// Add a container to make it scrollable with a fixed height
+gainersContainer.classList.add('max-h-[600px]', 'overflow-y-auto', 'pr-2');
+// Add custom scrollbar styling
+if (!document.getElementById('custom-scrollbar')) {
+const style = document.createElement('style');
+style.id = 'custom-scrollbar';
+style.textContent = `
+#gainers-container::-webkit-scrollbar {
+width: 6px;
+}
+#gainers-container::-webkit-scrollbar-track {
+background: rgba(30, 41, 59, 0.2);
+border-radius: 10px;
+}
+#gainers-container::-webkit-scrollbar-thumb {
+background: rgba(79, 70, 229, 0.5);
+border-radius: 10px;
+}
+#gainers-container::-webkit-scrollbar-thumb:hover {
+background: rgba(79, 70, 229, 0.8);
+}
+`;
+document.head.appendChild(style);
+}
+// Update button text
+viewAllGainersBtn.innerHTML = 'Show Less <i class="ri-arrow-up-s-line ml-1"></i>';
+// Add pagination event listeners
+const prevPageBtn = document.getElementById('prev-page');
+const nextPageBtn = document.getElementById('next-page');
+if (prevPageBtn) {
+prevPageBtn.addEventListener('click', () => {
+if (currentPage > 1) {
+currentPage--;
+renderGainers(true);
+}
+});
+}
+if (nextPageBtn) {
+nextPageBtn.addEventListener('click', () => {
+const totalPages = Math.ceil(allGainersData.length / itemsPerPage);
+if (currentPage < totalPages) {
+currentPage++;
+renderGainers(true);
+}
+});
+}
+} else {
+// Configure container for collapsed view
+gainersContainer.classList.remove('md:grid-cols-3', 'max-h-[600px]', 'overflow-y-auto', 'pr-2');
+gainersContainer.classList.add('md:grid-cols-4');
+// Reset current page
+currentPage = 1;
+// Update button text
+viewAllGainersBtn.innerHTML = 'View All <i class="ri-arrow-down-s-line ml-1"></i>';
+}
+// Animate cards with staggered delay
+setTimeout(() => {
+const cards = gainersContainer.querySelectorAll('.market-card');
+cards.forEach((card, index) => {
+setTimeout(() => {
+card.classList.remove('opacity-0', 'transform', 'translate-y-4');
+card.classList.add('transition-all', 'duration-500', 'ease-out');
+}, 50 * index);
+});
+// Add a subtle highlight effect to the top performers
+if (isExpanded) {
+const topPerformers = Array.from(cards).slice(0, 3);
+topPerformers.forEach(card => {
+card.classList.add('ring-1', 'ring-primary/30');
+});
+}
+}, 100);
+}, 600);
+}
+viewAllGainersBtn.addEventListener('click', function() {
+if (!isShowingAllGainers) {
+isShowingAllGainers = true;
+renderGainers(true);
+} else {
+isShowingAllGainers = false;
+renderGainers(false);
+}
+});
+// Trigger the View All Gainers button click
+document.addEventListener('DOMContentLoaded', function() {
+// Simulate a click on the View All Gainers button after the page loads
+setTimeout(() => {
+if (!isShowingAllGainers) {
+viewAllGainersBtn.click();
+}
+}, 1000);
+});
+});
+});
+
+async function fetchStockData(symbol) {
+    try {
+        const response = await fetch(`/api/stockedge/stock/${symbol}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching stock data:', error);
+        return null;
+    }
+}
+
+async function fetchStockHistory(symbol, timeframe = '1D') {
+    try {
+        const response = await fetch(`/api/stockedge/stock/${symbol}/history?timeframe=${timeframe}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching stock history:', error);
+        return null;
+    }
+}
+
+async function updateStockDetails(symbol) {
+    const stockData = await fetchStockData(symbol);
+    if (!stockData) {
+        document.getElementById('stockDetails').innerHTML = '<p>Error loading stock data</p>';
+        return;
+    }
+
+    const detailsHtml = `
+        <div class="stock-header">
+            <h2>${stockData.name} (${stockData.symbol})</h2>
+            <div class="price-info">
+                <span class="price">₹${stockData.price.toFixed(2)}</span>
+                <span class="change ${stockData.change >= 0 ? 'positive' : 'negative'}">
+                    ${stockData.change >= 0 ? '+' : ''}${stockData.change.toFixed(2)} (${stockData.changePercent.toFixed(2)}%)
+                </span>
+            </div>
+        </div>
+        <div class="stock-stats">
+            <div class="stat">
+                <span class="label">Open</span>
+                <span class="value">₹${stockData.open.toFixed(2)}</span>
+            </div>
+            <div class="stat">
+                <span class="label">High</span>
+                <span class="value">₹${stockData.high.toFixed(2)}</span>
+            </div>
+            <div class="stat">
+                <span class="label">Low</span>
+                <span class="value">₹${stockData.low.toFixed(2)}</span>
+            </div>
+            <div class="stat">
+                <span class="label">Volume</span>
+                <span class="value">${stockData.volume.toLocaleString()}</span>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('stockDetails').innerHTML = detailsHtml;
+    updateChart(symbol);
+}
+
+async function updateChart(symbol) {
+    const historyData = await fetchStockHistory(symbol);
+    if (!historyData || historyData.length === 0) {
+        document.getElementById('stockChart').innerHTML = '<p>Error loading chart data</p>';
+        return;
+    }
+
+    const ctx = document.getElementById('stockChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: historyData.map(item => new Date(item.timestamp).toLocaleDateString()),
+            datasets: [{
+                label: 'Price',
+                data: historyData.map(item => item.close),
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Price History'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false
+                }
+            }
+        }
+    });
+}
+
+// Function to load market data
+async function loadMarketData() {
+    try {
+        // Fetch StockEdge indices data
+        const indicesResponse = await fetch('/api/stockedge/indices');
+        const indicesData = await indicesResponse.json();
+        
+        // Update indices table
+        const indicesTableBody = document.getElementById('indicesTableBody');
+        indicesTableBody.innerHTML = '';
+        
+        if (indicesData && indicesData.length > 0) {
+            indicesData.forEach(index => {
+                const change = parseFloat(index.Change || 0);
+                const percentChange = parseFloat(index.ChangePercentage || 0);
+                const changeClass = change >= 0 ? 'text-success' : 'text-danger';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index.SecurityName || '-'}</td>
+                    <td>${index.Close || '-'}</td>
+                    <td class="${changeClass}">${change.toFixed(2)}</td>
+                    <td class="${changeClass}">${percentChange.toFixed(2)}%</td>
+                    <td>${index.High || '-'}</td>
+                    <td>${index.Low || '-'}</td>
+                `;
+                indicesTableBody.appendChild(row);
+            });
+        }
+
+        // Fetch StockEdge price movers data
+        const moversResponse = await fetch('/api/stockedge/price-movers');
+        const moversData = await moversResponse.json();
+        
+        // Update price movers table
+        const moversTableBody = document.getElementById('priceMoversTableBody');
+        moversTableBody.innerHTML = '';
+        
+        if (moversData && moversData.length > 0) {
+            moversData.forEach(stock => {
+                const change = parseFloat(stock.CZ || 0);
+                const percentChange = parseFloat(stock.CZG || 0);
+                const changeClass = change >= 0 ? 'text-success' : 'text-danger';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${stock.Name || '-'}</td>
+                    <td>${stock.SectorName || '-'}</td>
+                    <td>${stock.C || '-'}</td>
+                    <td class="${changeClass}">${change.toFixed(2)}</td>
+                    <td class="${changeClass}">${percentChange.toFixed(2)}%</td>
+                `;
+                moversTableBody.appendChild(row);
+            });
+        }
+
+        // Fetch StockEdge index gainers data
+        const gainersResponse = await fetch('/api/stockedge/index-gainers');
+        const gainersData = await gainersResponse.json();
+        
+        // Update index gainers table
+        const gainersTableBody = document.getElementById('indexGainersTableBody');
+        gainersTableBody.innerHTML = '';
+        
+        if (gainersData && gainersData.length > 0) {
+            gainersData.forEach(index => {
+                const change = parseFloat(index.Change || 0);
+                const percentChange = parseFloat(index.ChangePercentage || 0);
+                const changeClass = change >= 0 ? 'text-success' : 'text-danger';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index.SecurityName || '-'}</td>
+                    <td>${index.Close || '-'}</td>
+                    <td class="${changeClass}">${change.toFixed(2)}</td>
+                    <td class="${changeClass}">${percentChange.toFixed(2)}%</td>
+                    <td>${index.High || '-'}</td>
+                    <td>${index.Low || '-'}</td>
+                `;
+                gainersTableBody.appendChild(row);
+            });
+        }
+
+        // Fetch StockEdge insider deals data
+        const insiderResponse = await fetch('/api/stockedge/insider-deals');
+        const insiderData = await insiderResponse.json();
+        
+        // Update insider deals table
+        const insiderTableBody = document.getElementById('insiderDealsTableBody');
+        insiderTableBody.innerHTML = '';
+        
+        if (insiderData && insiderData.deals && insiderData.deals.length > 0) {
+            insiderData.deals.forEach(deal => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        ${deal.name}<br>
+                        <small class="text-muted">${deal.category}</small>
+                    </td>
+                    <td>
+                        <span class="${getTransactionClass(deal.transactionType)}">${deal.transactionType}</span><br>
+                        <small class="text-muted">${deal.exchange}</small>
+                    </td>
+                    <td>${deal.stockName}</td>
+                    <td>
+                        ${formatNumber(deal.quantity)}<br>
+                        ${deal.value ? `<small class="text-muted">₹ ${formatNumber(deal.value)}</small>` : ''}
+                    </td>
+                    <td>
+                        ${formatNumber(deal.holdingPostDeal)}<br>
+                        <small class="text-muted">(${deal.holdingPercentage?.toFixed(2) || '0.00'}%)</small>
+                    </td>
+                    <td>${formatDate(deal.dealDate)}</td>
+                `;
+                insiderTableBody.appendChild(row);
+            });
+        }
+
+    } catch (error) {
+        console.error('Error loading market data:', error);
+        // Show error messages in respective tables
+        document.getElementById('indicesTableBody').innerHTML = 
+            '<tr><td colspan="6" class="text-center text-danger">Error loading indices data</td></tr>';
+        document.getElementById('priceMoversTableBody').innerHTML = 
+            '<tr><td colspan="5" class="text-center text-danger">Error loading price movers data</td></tr>';
+        document.getElementById('indexGainersTableBody').innerHTML = 
+            '<tr><td colspan="6" class="text-center text-danger">Error loading index gainers data</td></tr>';
+        document.getElementById('insiderDealsTableBody').innerHTML = 
+            '<tr><td colspan="6" class="text-center text-danger">Error loading insider deals data</td></tr>';
+    }
+}
+
+// Helper function to get transaction class
+function getTransactionClass(type) {
+    switch (type.toLowerCase()) {
+        case 'bought':
+            return 'text-success';
+        case 'sold':
+            return 'text-danger';
+        case 'pledge':
+            return 'text-warning';
+        default:
+            return '';
+    }
+}
+
+// Helper function to format numbers with commas
+function formatNumber(num) {
+    return num ? num.toLocaleString('en-IN') : '-';
+}
+
+// Helper function to format date
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    });
+}
+
+// Load data when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    loadMarketData();
+    // Set up auto-refresh every 5 minutes
+    setInterval(loadMarketData, 300000);
+});
+</script>
+</body>
+</html>

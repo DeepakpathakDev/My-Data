@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Market Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --card-bg: #1e1e1e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --success: #00a651;
+            --danger: #ff4d4d;
+            --primary: #0066cc;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 8px;
+        }
+
+        .market-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            border-bottom: 1px solid #333;
+        }
+
+        .stock-card {
+            background-color: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .stock-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .positive {
+            color: var(--success);
+        }
+
+        .negative {
+            color: var(--danger);
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 8px;
+            z-index: 1000;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+
+        .region-section {
+            margin-bottom: 2rem;
+        }
+
+        .region-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .region-content {
+            padding: 1rem;
+        }
+
+        .market-status {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .market-open {
+            background-color: rgba(0, 166, 81, 0.1);
+            color: var(--success);
+        }
+
+        .market-closed {
+            background-color: rgba(255, 77, 77, 0.1);
+            color: var(--danger);
+        }
+
+        .chart-container {
+            height: 400px;
+            margin-bottom: 2rem;
+        }
+
+        .timeframe-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .timeframe-buttons .btn {
+            flex: 1;
+        }
+
+        .insider-trading-container {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .insider-trading-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .insider-trading-filters .search-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .insider-trading-filters .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: white;
+        }
+
+        .insider-trading-table-container {
+            overflow-x: auto;
+        }
+
+        .insider-trading-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .insider-trading-table th,
+        .insider-trading-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .insider-trading-table th {
+            background-color: #f5f5f5;
+            font-weight: 600;
+        }
+
+        .insider-trading-table tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        .insider-trading-table .acquisition {
+            color: #28a745;
+        }
+
+        .insider-trading-table .disposal {
+            color: #dc3545;
+        }
+
+        .insider-trading-table .revoke {
+            color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <!-- Market Status -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="section-header">
+                        <h2 class="mb-0">Market Status</h2>
+                        <div id="marketStatus" class="market-status">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Market Indices -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="section-header">
+                        <h2 class="mb-0">Market Indices</h2>
+                        <button class="btn btn-sm btn-outline-light" onclick="fetchMarketIndices()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="marketIndices" class="row">
+                            <div class="col-12">
+                                <div class="loading">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="section-header">
+                        <h2 class="mb-0">Search Stocks</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="search-container">
+                            <input type="text" id="searchInput" class="form-control" placeholder="Search for stocks...">
+                            <div id="searchResults" class="search-results" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock Chart -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="section-header">
+                        <h2 class="mb-0">Stock Chart</h2>
+                        <div class="timeframe-buttons">
+                            <button class="btn btn-sm btn-outline-light active" data-period="1D">1D</button>
+                            <button class="btn btn-sm btn-outline-light" data-period="5D">5D</button>
+                            <button class="btn btn-sm btn-outline-light" data-period="1M">1M</button>
+                            <button class="btn btn-sm btn-outline-light" data-period="3M">3M</button>
+                            <button class="btn btn-sm btn-outline-light" data-period="1Y">1Y</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="stockChart" class="chart-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trending Stocks -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="section-header">
+                        <h2 class="mb-0">Trending Stocks</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="trendingStocks" class="row">
+                            <div class="col-12">
+                                <div class="loading">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Insider Trading Section -->
+        <div class="dashboard-section">
+            <h2>Insider Trading</h2>
+            <div class="insider-trading-container">
+                <div class="insider-trading-filters">
+                    <input type="text" id="insiderSearch" placeholder="Search by company or person..." class="search-input">
+                    <select id="insiderCategory" class="filter-select">
+                        <option value="">All Categories</option>
+                        <option value="Promoter">Promoter</option>
+                        <option value="Promoter Group">Promoter Group</option>
+                        <option value="Employee">Employee</option>
+                    </select>
+                    <select id="insiderTransactionType" class="filter-select">
+                        <option value="">All Types</option>
+                        <option value="Acquisition">Acquisition</option>
+                        <option value="Disposal">Disposal</option>
+                        <option value="Revoke">Revoke</option>
+                    </select>
+                </div>
+                <div class="insider-trading-table-container">
+                    <table class="insider-trading-table">
+                        <thead>
+                            <tr>
+                                <th>Security</th>
+                                <th>Person</th>
+                                <th>Category</th>
+                                <th>Transaction</th>
+                                <th>Quantity</th>
+                                <th>Value</th>
+                                <th>Date</th>
+                                <th>Mode</th>
+                            </tr>
+                        </thead>
+                        <tbody id="insiderTradingBody">
+                            <!-- Data will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize TradingView chart
+        const chart = LightweightCharts.createChart(document.getElementById('stockChart'), {
+            width: document.getElementById('stockChart').clientWidth,
+            height: 400,
+            layout: {
+                background: { color: '#1e1e1e' },
+                textColor: '#e0e0e0',
+            },
+            grid: {
+                vertLines: { color: '#333' },
+                horzLines: { color: '#333' },
+            },
+            crosshair: {
+                mode: LightweightCharts.CrosshairMode.Normal,
+            },
+            rightPriceScale: {
+                borderColor: '#333',
+            },
+            timeScale: {
+                borderColor: '#333',
+            },
+        });
+
+        const candlestickSeries = chart.addCandlestickSeries({
+            upColor: '#00a651',
+            downColor: '#ff4d4d',
+            borderVisible: false,
+            wickUpColor: '#00a651',
+            wickDownColor: '#ff4d4d',
+        });
+
+        // Utility functions
+        function showLoading(message = 'Loading...') {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading';
+            loadingDiv.innerHTML = `
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">${message}</span>
+                </div>
+                <span class="ms-2">${message}</span>
+            `;
+            return loadingDiv;
+        }
+
+        function showError(message, duration = 5000) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger alert-dismissible fade show';
+            errorDiv.innerHTML = `
+                <i class="fas fa-exclamation-circle me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(errorDiv);
+            setTimeout(() => errorDiv.remove(), duration);
+        }
+
+        function formatNumber(num) {
+            return new Intl.NumberFormat('en-IN').format(num);
+        }
+
+        function formatCurrency(num) {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR'
+            }).format(num);
+        }
+
+        function formatPercentage(num) {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'percent',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(num / 100);
+        }
+
+        // Market Status
+        async function updateMarketStatus() {
+            try {
+                const response = await fetch('/api/market-trends');
+                if (!response.ok) throw new Error('Failed to fetch market status');
+                const data = await response.json();
+                
+                const marketStatus = document.getElementById('marketStatus');
+                const indianIndices = data.filter(index => index.region === 'India');
+                const isMarketOpen = indianIndices.some(index => index.movement === 'Up' || index.movement === 'Down');
+                
+                marketStatus.className = `market-status ${isMarketOpen ? 'market-open' : 'market-closed'}`;
+                marketStatus.innerHTML = `
+                    <i class="fas fa-${isMarketOpen ? 'check-circle' : 'times-circle'} me-2"></i>
+                    ${isMarketOpen ? 'Market Open' : 'Market Closed'}
+                `;
+            } catch (error) {
+                console.error('Error updating market status:', error);
+                showError('Failed to update market status');
+            }
+        }
+
+        // Market Indices
+        async function fetchMarketIndices() {
+            const indicesContainer = document.getElementById('marketIndices');
+            indicesContainer.innerHTML = '';
+            indicesContainer.appendChild(showLoading('Fetching market indices...'));
+
+            try {
+                const response = await fetch('/api/market-trends');
+                if (!response.ok) throw new Error('Failed to fetch market indices');
+                const data = await response.json();
+
+                const indicesByRegion = data.reduce((acc, index) => {
+                    const region = index.region || 'Other';
+                    if (!acc[region]) acc[region] = [];
+                    acc[region].push(index);
+                    return acc;
+                }, {});
+
+                let html = '';
+                for (const [region, indices] of Object.entries(indicesByRegion)) {
+                    html += `
+                        <div class="col-12 mb-4">
+                            <div class="region-section">
+                                <div class="region-header">
+                                    <div>
+                                        <i class="fas fa-globe me-2"></i>
+                                        ${region}
+                                    </div>
+                                    <span class="badge bg-secondary">${indices.length} indices</span>
+                                </div>
+                                <div class="region-content">
+                                    <div class="row">
+                                        ${indices.map(index => createStockCard({
+                                            symbol: index.symbol,
+                                            name: index.name,
+                                            lastPrice: index.price,
+                                            change: index.changePercent,
+                                            volume: 'N/A',
+                                            marketCap: 'N/A',
+                                            lastUpdated: index.timestamp,
+                                            movement: index.movement,
+                                            region: region.toLowerCase()
+                                        })).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                indicesContainer.innerHTML = html;
+            } catch (error) {
+                console.error('Error fetching market indices:', error);
+                indicesContainer.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Failed to fetch market indices. Please try again later.
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Search functionality
+        let searchTimeout;
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+            
+            if (query.length < 2) {
+                searchResults.style.display = 'none';
+                return;
+            }
+
+            searchTimeout = setTimeout(() => searchStocks(query), 500);
+        });
+
+        async function searchStocks(query) {
+            searchResults.innerHTML = '';
+            searchResults.appendChild(showLoading('Searching...'));
+            searchResults.style.display = 'block';
+
+            try {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                if (!response.ok) throw new Error('Failed to search stocks');
+                const data = await response.json();
+
+                if (!data || data.length === 0) {
+                    searchResults.innerHTML = `
+                        <div class="p-3">
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                No stocks found matching "${query}"
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const stocksByRegion = data.reduce((acc, stock) => {
+                    const region = stock.region || 'Other';
+                    if (!acc[region]) acc[region] = [];
+                    acc[region].push(stock);
+                    return acc;
+                }, {});
+
+                let html = '';
+                for (const [region, stocks] of Object.entries(stocksByRegion)) {
+                    html += `
+                        <div class="p-3 border-bottom">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <i class="fas fa-globe me-2"></i>
+                                    ${region}
+                                </div>
+                                <span class="badge bg-secondary">${stocks.length} stocks</span>
+                            </div>
+                            ${stocks.map(stock => createStockCard(stock)).join('')}
+                        </div>
+                    `;
+                }
+
+                searchResults.innerHTML = html;
+            } catch (error) {
+                console.error('Error searching stocks:', error);
+                searchResults.innerHTML = `
+                    <div class="p-3">
+                        <div class="alert alert-danger mb-0">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Failed to search stocks. Please try again.
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Create stock card
+        function createStockCard(stock) {
+            const movementClass = stock.movement === 'Up' ? 'positive' : 'negative';
+            const changeIcon = stock.movement === 'Up' ? 'fa-arrow-up' : 'fa-arrow-down';
+            
+            return `
+                <div class="col-md-4 col-lg-3 mb-3">
+                    <div class="stock-card" onclick="showStockDetails('${stock.symbol}')">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h5 class="mb-0">${stock.symbol}</h5>
+                                <small class="text-secondary">${stock.name}</small>
+                            </div>
+                            <span class="badge bg-${stock.movement === 'Up' ? 'success' : 'danger'}">
+                                <i class="fas ${changeIcon} me-1"></i>
+                                ${formatPercentage(stock.change)}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-end">
+                            <div>
+                                <div class="h5 mb-0 ${movementClass}">${formatNumber(stock.lastPrice)}</div>
+                                <small class="text-secondary">Last updated: ${new Date(stock.lastUpdated).toLocaleTimeString()}</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-light">
+                                <i class="fas fa-chart-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Show stock details
+        async function showStockDetails(symbol) {
+            try {
+                const response = await fetch(`/api/stock/${symbol}`);
+                if (!response.ok) throw new Error('Failed to fetch stock data');
+                const data = await response.json();
+
+                // Update chart
+                const timeframe = document.querySelector('.timeframe-buttons .btn.active').dataset.period;
+                const historicalData = await fetchHistoricalData(symbol, timeframe);
+                candlestickSeries.setData(historicalData);
+
+                // Update stock details
+                document.querySelector('.section-header h2').textContent = `${data.name} (${data.symbol})`;
+            } catch (error) {
+                console.error('Error showing stock details:', error);
+                showError('Failed to load stock details');
+            }
+        }
+
+        // Fetch historical data
+        async function fetchHistoricalData(symbol, timeframe) {
+            try {
+                const response = await fetch(`/api/stock/${symbol}/history?timeframe=${timeframe}`);
+                if (!response.ok) throw new Error('Failed to fetch historical data');
+                const data = await response.json();
+                return data.map(item => ({
+                    time: new Date(item.timestamp).getTime() / 1000,
+                    open: item.open,
+                    high: item.high,
+                    low: item.low,
+                    close: item.close
+                }));
+            } catch (error) {
+                console.error('Error fetching historical data:', error);
+                return [];
+            }
+        }
+
+        // Function to load insider trading data
+        async function loadInsiderTradingData() {
+            try {
+                const response = await fetch('/api/insider-trading');
+                const data = await response.json();
+                
+                const tableBody = document.getElementById('insiderTradingBody');
+                tableBody.innerHTML = '';
+                
+                data.transactions.forEach(transaction => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>
+                            <div class="stock-info">
+                                <span class="stock-code">${transaction.securityCode}</span>
+                                <span class="stock-name">${transaction.securityName}</span>
+                            </div>
+                        </td>
+                        <td>${transaction.personName}</td>
+                        <td>${transaction.category}</td>
+                        <td class="${transaction.transactionType.toLowerCase()}">
+                            ${transaction.transactionType}
+                            <div class="holdings-info">
+                                <small>Pre: ${transaction.preTransaction}</small>
+                                <small>Post: ${transaction.postTransaction}</small>
+                            </div>
+                        </td>
+                        <td>${transaction.quantity}</td>
+                        <td>₹${transaction.value}</td>
+                        <td>
+                            <div class="date-info">
+                                <span>${transaction.transactionDate}</span>
+                                <small>Reported: ${transaction.reportDate}</small>
+                            </div>
+                        </td>
+                        <td>${transaction.mode}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error loading insider trading data:', error);
+            }
+        }
+
+        // Add event listeners for filters
+        document.getElementById('insiderSearch').addEventListener('input', filterInsiderTrading);
+        document.getElementById('insiderCategory').addEventListener('change', filterInsiderTrading);
+        document.getElementById('insiderTransactionType').addEventListener('change', filterInsiderTrading);
+
+        function filterInsiderTrading() {
+            const searchTerm = document.getElementById('insiderSearch').value.toLowerCase();
+            const categoryFilter = document.getElementById('insiderCategory').value;
+            const typeFilter = document.getElementById('insiderTransactionType').value;
+            
+            const rows = document.querySelectorAll('#insiderTradingBody tr');
+            
+            rows.forEach(row => {
+                const securityName = row.querySelector('.stock-name').textContent.toLowerCase();
+                const personName = row.cells[1].textContent.toLowerCase();
+                const category = row.cells[2].textContent;
+                const type = row.cells[3].textContent.trim();
+                
+                const matchesSearch = securityName.includes(searchTerm) || personName.includes(searchTerm);
+                const matchesCategory = !categoryFilter || category === categoryFilter;
+                const matchesType = !typeFilter || type === typeFilter;
+                
+                row.style.display = matchesSearch && matchesCategory && matchesType ? '' : 'none';
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateMarketStatus();
+            fetchMarketIndices();
+            
+            // Update data every 30 seconds
+            setInterval(() => {
+                updateMarketStatus();
+                fetchMarketIndices();
+            }, 30000);
+
+            // Handle timeframe buttons
+            document.querySelectorAll('.timeframe-buttons .btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    document.querySelectorAll('.timeframe-buttons .btn').forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    const symbol = document.querySelector('.section-header h2').textContent.match(/\(([^)]+)\)/)?.[1];
+                    if (symbol) {
+                        showStockDetails(symbol);
+                    }
+                });
+            });
+
+            // Load insider trading data when the page loads
+            loadInsiderTradingData();
+        });
+    </script>
+</body>
+</html> 

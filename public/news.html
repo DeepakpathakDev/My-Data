@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Market News - StockInsight</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <header class="bg-[#1a1a1a] border-b border-[#333333]">
+        <div class="flex items-center justify-between px-4 py-2">
+            <div class="flex items-center">
+                <a href="/" class="text-2xl font-['Pacifico'] text-white mr-8">StockInsight</a>
+            </div>
+            <nav class="flex space-x-6">
+                <a href="/" class="text-[#a0a0a0] hover:text-white">Home</a>
+                <a href="/news" class="text-white">News</a>
+                <a href="/finance" class="text-[#a0a0a0] hover:text-white">Finance</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8">Latest Stock Market News</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="newsContainer">
+            <!-- News items will be dynamically loaded here -->
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fetch news data
+            fetch('/api/news')
+                .then(response => response.json())
+                .then(data => {
+                    const newsContainer = document.getElementById('newsContainer');
+                    data.forEach(news => {
+                        const newsCard = document.createElement('div');
+                        newsCard.className = 'bg-[#1a1a1a] p-4 rounded-lg';
+                        newsCard.innerHTML = `
+                            <div class="mb-4">
+                                <img src="${news.image}" alt="${news.title}" class="w-full h-48 object-cover rounded">
+                            </div>
+                            <h2 class="text-xl font-bold mb-2">${news.title}</h2>
+                            <p class="text-[#a0a0a0] mb-4">${news.summary}</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-[#a0a0a0]">${news.source} • ${news.date}</span>
+                                <a href="${news.url}" target="_blank" class="text-primary hover:underline">Read More</a>
+                            </div>
+                        `;
+                        newsContainer.appendChild(newsCard);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching news:', error);
+                });
+        });
+    </script>
+</body>
+</html> 

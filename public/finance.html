@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Data Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .dashboard-section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        .insider-trading-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .search-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .data-table th {
+            background-color: #f5f5f5;
+            font-weight: 600;
+        }
+        .data-table tr:hover {
+            background-color: #f9f9f9;
+        }
+        .acquisition {
+            color: #28a745;
+        }
+        .disposal {
+            color: #dc3545;
+        }
+        .revoke {
+            color: #ffc107;
+        }
+        .stock-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .stock-code {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .stock-name {
+            font-size: 0.9em;
+            color: #666;
+        }
+        .holdings-info {
+            font-size: 0.8em;
+            color: #666;
+        }
+        .date-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .date-info small {
+            color: #666;
+        }
+        .nav-tabs {
+            margin-bottom: 20px;
+        }
+        .tab-content {
+            padding: 20px 0;
+        }
+        .filter-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .positive-change {
+            color: green;
+        }
+        .negative-change {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <h1 class="mb-4">Financial Data Dashboard</h1>
+        
+        <!-- Add Search Section -->
+        <div class="dashboard-section mb-4">
+            <div class="search-container">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="stockSearch" placeholder="Search for stocks...">
+                    <button class="btn btn-primary" type="button" onclick="searchStocks()">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+            </div>
+                <div class="search-results mt-2" id="searchResults" style="display: none;">
+                    <!-- Search results will be displayed here -->
+        </div>
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs" id="financeTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="insider-tab" data-bs-toggle="tab" data-bs-target="#insider" type="button" role="tab">Insider Trading</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="market-tab" data-bs-toggle="tab" data-bs-target="#market" type="button" role="tab">Market Trends</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="stocks-tab" data-bs-toggle="tab" data-bs-target="#stocks" type="button" role="tab">Top Stocks</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="bse-tab" data-bs-toggle="tab" data-bs-target="#bse" type="button" role="tab">BSE Data</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="stockedge-tab" data-bs-toggle="tab" data-bs-target="#stockedge" type="button" role="tab">Stock Data</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="financeTabContent">
+            <!-- Insider Trading Tab -->
+            <div class="tab-pane fade show active" id="insider" role="tabpanel">
+                <div class="dashboard-section">
+                    <h2 class="section-title">Insider Trading Deals</h2>
+                    
+                    <!-- Exchange Toggle Buttons -->
+                    <div class="btn-group mb-3" role="group" aria-label="Exchange Toggle">
+                        <button type="button" class="btn btn-outline-primary active" id="bseButton" onclick="switchExchange('BSE')">BSE</button>
+                        <button type="button" class="btn btn-outline-primary" id="nseButton" onclick="switchExchange('NSE')">NSE</button>
+        </div>
+
+                    <!-- Filter Section -->
+                    <div class="filter-section">
+                        <div class="row g-3">
+                            <div class="col-md-2">
+                                <input type="text" class="form-control" id="insiderSearch" placeholder="Search...">
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select" id="insiderCategory">
+                                    <option value="">All Categories</option>
+                                    <option value="Promoter">Promoter</option>
+                                    <option value="Director">Director</option>
+                                    <option value="KMP">Key Managerial Personnel</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select" id="insiderTransactionType">
+                                    <option value="">All Transactions</option>
+                                    <option value="Bought">Bought</option>
+                                    <option value="Sold">Sold</option>
+                                    <option value="Pledge">Pledge</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="date" class="form-control" id="startDate">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="date" class="form-control" id="endDate">
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary" onclick="loadInsiderTradingData()">Search</button>
+                                <button class="btn btn-secondary" onclick="resetFilters()">Reset</button>
+                            </div>
+            </div>
+        </div>
+
+                    <!-- Table Section -->
+                    <div class="table-container">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name of Person</th>
+                                    <th>Transaction Type</th>
+                                    <th>Stock Name</th>
+                                    <th>Quantity</th>
+                                    <th>Holding Post Deal</th>
+                                    <th>Deal Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="insiderDealsTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">Loading data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <!-- Pagination Controls -->
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div>
+                                <button class="btn btn-outline-primary" id="prevPage" onclick="changePage(-1)" disabled>
+                                    <i class="bi bi-chevron-left"></i> Previous
+                                </button>
+                                <span class="mx-2" id="pageInfo">Page 1</span>
+                                <button class="btn btn-outline-primary" id="nextPage" onclick="changePage(1)" disabled>
+                                    Next <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </div>
+                            <div class="text-muted" id="totalRecords">Total Records: 0</div>
+                        </div>
+            </div>
+            </div>
+        </div>
+
+            <!-- Market Trends Tab -->
+            <div class="tab-pane fade" id="market" role="tabpanel">
+                <div class="dashboard-section">
+                    <h2 class="section-title">Market Trends</h2>
+                    
+                    <!-- Most Visited Stocks Section -->
+                    <div class="table-container">
+                        <h3 class="mb-3">Most Visited Stocks</h3>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Stock Name</th>
+                                    <th>Exchange</th>
+                                    <th>Price</th>
+                                    <th>Change</th>
+                                    <th>% Change</th>
+                                    <th>Sector</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mostVisitedStocksBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">Loading data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+            </div>
+        </div>
+
+            <!-- Top Stocks Tab -->
+            <div class="tab-pane fade" id="stocks" role="tabpanel">
+                <div class="dashboard-section">
+                    <h2 class="section-title">Top Stocks</h2>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Name</th>
+                                    <th>Price</th>
+                                    <th>Change</th>
+                                    <th>Volume</th>
+                                    <th>Market Cap</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topStocksBody">
+                                <!-- Top stocks will be displayed here -->
+                            </tbody>
+                        </table>
+            </div>
+            </div>
+        </div>
+
+            <!-- BSE Data Tab -->
+            <div class="tab-pane fade" id="bse" role="tabpanel">
+                <div class="dashboard-section">
+                    <h2 class="section-title">BSE Turnover</h2>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Turnover (₹ Cr)</th>
+                                    <th>No. of Trades</th>
+                                    <th>No. of Companies</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bseTurnoverBody">
+                                <!-- Data will be populated here -->
+                            </tbody>
+                        </table>
+            </div>
+        </div>
+
+                <div class="dashboard-section mt-4">
+                    <h2 class="section-title">BSE Indices</h2>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Index</th>
+                                    <th>Current</th>
+                                    <th>Change</th>
+                                    <th>% Change</th>
+                                    <th>High</th>
+                                    <th>Low</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bseIndicesBody">
+                                <!-- Data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    </div>
+
+                <div class="dashboard-section mt-4">
+                    <h2 class="section-title">Top Gainers</h2>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Company</th>
+                                    <th>LTP</th>
+                                    <th>Change</th>
+                                    <th>% Change</th>
+                                    <th>High</th>
+                                    <th>Low</th>
+                                    <th>Volume</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bseGainersBody">
+                                <!-- Data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- StockEdge Data Tab -->
+            <div class="tab-pane fade" id="stockedge" role="tabpanel">
+                <div class="dashboard-section">
+                    <h2 class="section-title">NSE Indices</h2>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Index</th>
+                                    <th>Current</th>
+                                    <th>Change</th>
+                                    <th>% Change</th>
+                                    <th>High</th>
+                                    <th>Low</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stockedgeIndicesBody">
+                                <!-- Data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="dashboard-section mt-4">
+                    <h2 class="section-title">Top Price Movers</h2>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Company</th>
+                                    <th>Sector</th>
+                                    <th>Current</th>
+                                    <th>Change</th>
+                                    <th>% Change</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stockedgePriceMoversBody">
+                                <!-- Data will be populated here -->
+                            </tbody>
+                        </table>
+                </div>
+            </div>
+
+                <div class="dashboard-section mt-4">
+                    <h2 class="section-title">Index Gainers</h2>
+                    <div class="table-container">
+                        <table class="data-table">
+                    <thead>
+                        <tr>
+                                    <th>Index</th>
+                                    <th>Current</th>
+                                    <th>Change</th>
+                                    <th>% Change</th>
+                                    <th>High</th>
+                                    <th>Low</th>
+                        </tr>
+                    </thead>
+                            <tbody id="stockedgeIndexGainersBody">
+                                <!-- Data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Insider Trading Deals</h5>
+                                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Security</th>
+                                        <th>Exchange</th>
+                                        <th>Client</th>
+                                        <th>Category</th>
+                                        <th>Transaction</th>
+                                        <th>Mode</th>
+                                        <th>Quantity</th>
+                                        <th>Value (₹)</th>
+                                        <th>Price/Share</th>
+                                        <th>Holding %</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stockedgeInsiderDealsBody">
+                                    <tr>
+                                        <td colspan="10" class="text-center">Loading data...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                    </div>
+                                    </div>
+                                </div>
+
+    <div class="dashboard-section mt-4">
+        <h2 class="section-title">Corporate Announcements</h2>
+        <div class="filter-section mb-3">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" class="form-control" id="announcementSearch" placeholder="Search announcements...">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="announcementType">
+                        <option value="">All Types</option>
+                        <option value="General_Announcements">General Announcements</option>
+                        <option value="Outcome">Outcome</option>
+                        <option value="Intimation">Intimation</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-primary" onclick="loadCorporateAnnouncements()">
+                        <span id="announcementLoadingSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        Search
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th>Subject</th>
+                        <th>Type</th>
+                        <th>Date</th>
+                        <th>File</th>
+                    </tr>
+                </thead>
+                <tbody id="corporateAnnouncementsBody">
+                    <tr>
+                        <td colspan="5" class="text-center">Loading data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <!-- Pagination Controls -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div>
+                <button class="btn btn-outline-primary" id="prevAnnouncementPage" onclick="changeAnnouncementPage(-1)" disabled>
+                    <i class="bi bi-chevron-left"></i> Previous
+                </button>
+                <span class="mx-2" id="announcementPageInfo">Page 1</span>
+                <button class="btn btn-outline-primary" id="nextAnnouncementPage" onclick="changeAnnouncementPage(1)" disabled>
+                    Next <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+            <div class="text-muted" id="totalAnnouncements">Total Records: 0</div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Add these variables at the beginning of your script section
+        let currentExchange = 'BSE';
+        let currentPage = 1;
+        let totalPages = 1;
+        let totalRecords = 0;
+        const pageSize = 20; // Changed to match API limit of 20 records per page
+
+        // Add these functions at the beginning of your script section
+        let searchTimeout;
+
+        // Function to switch between exchanges
+        function switchExchange(exchange) {
+            currentExchange = exchange;
+            currentPage = 1; // Reset to first page when switching exchanges
+            // Update button states
+            document.getElementById('bseButton').classList.toggle('active', exchange === 'BSE');
+            document.getElementById('nseButton').classList.toggle('active', exchange === 'NSE');
+            // Reload data with new exchange
+            loadInsiderTradingData();
+        }
+
+        // Function to reset all filters
+        function resetFilters() {
+            document.getElementById('insiderSearch').value = '';
+            document.getElementById('insiderCategory').value = '';
+            document.getElementById('insiderTransactionType').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            currentPage = 1; // Reset to first page
+            loadInsiderTradingData();
+        }
+
+        // Function to change page
+        function changePage(delta) {
+            const newPage = currentPage + delta;
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                updatePaginationControls();
+                        loadInsiderTradingData();
+            }
+        }
+
+        // Function to update pagination controls
+        function updatePaginationControls() {
+            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = currentPage === totalPages;
+            document.getElementById('totalRecords').textContent = `Total Records: ${totalRecords}`;
+        }
+
+        // Function to load insider trading data
+        async function loadInsiderTradingData() {
+            try {
+                const searchTerm = document.getElementById('insiderSearch').value;
+                const category = document.getElementById('insiderCategory').value;
+                const transactionType = document.getElementById('insiderTransactionType').value;
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+
+                // Show loading state
+                const tableBody = document.getElementById('insiderDealsTableBody');
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Loading data...</td></tr>';
+
+                // Construct API URL with filters, current exchange, and pagination
+                let url = `/api/stockedge/insider-deals?exchange=${currentExchange}&page=${currentPage}&pageSize=${pageSize}`;
+                if (transactionType) url += `&transactionType=${transactionType}`;
+                if (startDate && endDate) {
+                    url += `&startDate=${startDate}&endDate=${endDate}`;
+                }
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+
+                // Update pagination info
+                totalRecords = data.totalRecords || 0;
+                totalPages = Math.ceil(totalRecords / pageSize);
+                updatePaginationControls();
+
+                // Filter data based on search term and category
+                let filteredData = data.deals || [];
+                if (searchTerm) {
+                    const searchLower = searchTerm.toLowerCase();
+                    filteredData = filteredData.filter(deal => 
+                        deal.name.toLowerCase().includes(searchLower) ||
+                        deal.stockName.toLowerCase().includes(searchLower)
+                    );
+                }
+                if (category) {
+                    filteredData = filteredData.filter(deal => 
+                        deal.category === category
+                    );
+                }
+
+                if (filteredData.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No data found</td></tr>';
+                    return;
+                }
+
+                tableBody.innerHTML = filteredData.map(deal => `
+                    <tr>
+                        <td>
+                            ${deal.name}<br>
+                            <small class="text-muted">${deal.category}</small>
+                        </td>
+                        <td>
+                            <span class="${getTransactionClass(deal.transactionType)}">${deal.transactionType}</span><br>
+                            <small class="text-muted">${currentExchange}</small>
+                        </td>
+                        <td>${deal.stockName}</td>
+                        <td>
+                            ${formatNumber(deal.quantity)}<br>
+                            ${deal.value ? `<small class="text-muted">₹ ${formatNumber(deal.value)}</small>` : ''}
+                        </td>
+                        <td>
+                            ${formatNumber(deal.holdingPostDeal)}<br>
+                            <small class="text-muted">(${deal.holdingPercentage?.toFixed(2) || '0.00'}%)</small>
+                        </td>
+                        <td>${formatDate(deal.dealDate)}</td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading insider trading data:', error);
+                document.getElementById('insiderDealsTableBody').innerHTML = 
+                    '<tr><td colspan="6" class="text-center text-danger">Error loading data. Please try again.</td></tr>';
+            }
+        }
+
+        // Helper function to get transaction class
+        function getTransactionClass(type) {
+            switch (type.toLowerCase()) {
+                case 'bought':
+                    return 'text-success';
+                case 'sold':
+                    return 'text-danger';
+                case 'pledge':
+                    return 'text-warning';
+                default:
+                    return '';
+            }
+        }
+
+        // Helper function to format numbers with commas
+        function formatNumber(num) {
+            return num ? num.toLocaleString('en-IN') : '-';
+        }
+
+        // Helper function to format date
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+
+        // Function to load market trends
+        async function loadMarketTrends() {
+            try {
+                const response = await fetch('/api/market-trends');
+                const data = await response.json();
+                
+                const marketTrendsDiv = document.getElementById('marketTrends');
+                marketTrendsDiv.innerHTML = '';
+                
+                // Create a table for market trends
+                const table = document.createElement('table');
+                table.className = 'data-table';
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>Index</th>
+                            <th>Last</th>
+                            <th>Change</th>
+                            <th>% Change</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="marketTrendsBody"></tbody>
+                `;
+                
+                const tbody = table.querySelector('#marketTrendsBody');
+                data.forEach(trend => {
+                    const row = document.createElement('tr');
+                                row.innerHTML = `
+                        <td>${trend.index}</td>
+                        <td>${trend.last}</td>
+                        <td class="${trend.change >= 0 ? 'text-success' : 'text-danger'}">${trend.change}</td>
+                        <td class="${trend.percentChange >= 0 ? 'text-success' : 'text-danger'}">${trend.percentChange}%</td>
+                        <td>${trend.status}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+                marketTrendsDiv.appendChild(table);
+            } catch (error) {
+                console.error('Error loading market trends:', error);
+            }
+        }
+
+        // Function to load top stocks
+        async function loadTopStocks() {
+            try {
+                const response = await fetch('/api/stockedge/trending-stocks');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                const tableBody = document.getElementById('topStocksBody');
+                tableBody.innerHTML = '';
+                
+                if (data && data.length > 0) {
+                    data.forEach(stock => {
+                        const changeClass = stock.changePercent >= 0 ? 'text-success' : 'text-danger';
+                        const changeIcon = stock.changePercent >= 0 ? '↑' : '↓';
+                        
+                        const row = document.createElement('tr');
+                                row.innerHTML = `
+                            <td>
+                                <div class="stock-info">
+                                    <span class="stock-code">${stock.symbol}</span>
+                                    <span class="stock-name">${stock.name}</span>
+                                </div>
+                            </td>
+                            <td>${stock.exchange}</td>
+                            <td>₹${stock.currentPrice?.toFixed(2) || '-'}</td>
+                            <td class="${changeClass}">
+                                ${changeIcon} ${Math.abs(stock.changePercent).toFixed(2)}%
+                            </td>
+                            <td>${stock.sector || '-'}</td>
+                        `;
+                                tableBody.appendChild(row);
+                    });
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No trending stocks data available</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading top stocks:', error);
+                const tableBody = document.getElementById('topStocksBody');
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error loading data. Please try again.</td></tr>';
+            }
+        }
+
+        // Function to load BSE turnover data
+        async function loadBSETurnover() {
+            try {
+                const response = await fetch('/api/bse/turnover');
+                const data = await response.json();
+                
+                const tableBody = document.getElementById('bseTurnoverBody');
+                tableBody.innerHTML = '';
+                
+                if (data && data.length > 0) {
+                    data.forEach(item => {
+                        const row = document.createElement('tr');
+                                row.innerHTML = `
+                            <td>${item.date || '-'}</td>
+                            <td>₹${(item.turnover / 10000000).toFixed(2)}</td>
+                            <td>${item.noOfTrades || '-'}</td>
+                            <td>${item.noOfCompanies || '-'}</td>
+                        `;
+                                tableBody.appendChild(row);
+                    });
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No turnover data available</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading BSE turnover data:', error);
+                const tableBody = document.getElementById('bseTurnoverBody');
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error loading data. Please try again.</td></tr>';
+            }
+        }
+
+        // Function to load BSE indices data
+        async function loadBSEIndices() {
+            try {
+                const response = await fetch('/api/bse/indices');
+                const data = await response.json();
+                
+                const tableBody = document.getElementById('bseIndicesBody');
+                tableBody.innerHTML = '';
+                
+                if (data && data.Table && data.Table.length > 0) {
+                    data.Table.forEach(index => {
+                        const change = parseFloat(index.chg || 0);
+                        const percentChange = parseFloat(index.perchg || 0);
+                        const changeClass = change >= 0 ? 'text-success' : 'text-danger';
+                        
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                            <td>${index.indexname || '-'}</td>
+                            <td>${index.current || '-'}</td>
+                            <td class="${changeClass}">${change.toFixed(2)}</td>
+                            <td class="${changeClass}">${percentChange.toFixed(2)}%</td>
+                            <td>${index.high || '-'}</td>
+                            <td>${index.low || '-'}</td>
+                        `;
+                            tableBody.appendChild(row);
+                    });
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No indices data available</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading BSE indices data:', error);
+                const tableBody = document.getElementById('bseIndicesBody');
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading data. Please try again.</td></tr>';
+            }
+        }
+
+        // Function to load BSE gainers data
+        async function loadBSEGainers() {
+            try {
+                const response = await fetch('/api/bse/gainers');
+                const data = await response.json();
+                
+                const tableBody = document.getElementById('bseGainersBody');
+                tableBody.innerHTML = '';
+                
+                if (data && data.Table && data.Table.length > 0) {
+                    data.Table.forEach(stock => {
+                        const change = parseFloat(stock.change_val || 0);
+                        const percentChange = parseFloat(stock.change_percent || 0);
+                        const changeClass = change >= 0 ? 'text-success' : 'text-danger';
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${stock.scrip_cd || '-'}</td>
+                            <td>
+                                <div class="stock-info">
+                                    <span class="stock-code">${stock.scripname || '-'}</span>
+                                    <span class="stock-name">${stock.LONG_NAME || '-'}</span>
+                                </div>
+                            </td>
+                            <td>₹${parseFloat(stock.ltradert || 0).toFixed(2)}</td>
+                            <td class="${changeClass}">${change.toFixed(2)}</td>
+                            <td class="${changeClass}">${percentChange.toFixed(2)}%</td>
+                            <td>₹${parseFloat(stock.highrate || 0).toFixed(2)}</td>
+                            <td>₹${parseFloat(stock.lowrate || 0).toFixed(2)}</td>
+                            <td>${(parseInt(stock.trd_vol || 0)).toLocaleString()}</td>
+                        `;
+                            tableBody.appendChild(row);
+                        });
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="8" class="text-center">No gainers data available</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading BSE gainers data:', error);
+                const tableBody = document.getElementById('bseGainersBody');
+                tableBody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error loading data. Please try again.</td></tr>';
+            }
+        }
+
+        // Load data when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadInsiderTradingData();
+            loadMarketTrends();
+            loadTopStocks();
+            loadBSETurnover();
+            loadBSEIndices();
+            loadBSEGainers();
+            loadMostVisitedStocks();
+        });
+
+        // Load BSE data when tab is clicked
+        document.getElementById('bse-tab').addEventListener('click', () => {
+            loadBSETurnover();
+            loadBSEIndices();
+            loadBSEGainers();
+        });
+
+        // Function to load StockEdge indices data
+        async function loadStockEdgeIndices() {
+            try {
+                const response = await fetch('/api/stockedge/indices');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                const tableBody = document.getElementById('stockedgeIndicesBody');
+                tableBody.innerHTML = '';
+                
+                if (data && data.length > 0) {
+                    data.forEach(index => {
+                        const change = parseFloat(index.Change || 0);
+                        const percentChange = parseFloat(index.ChangePercentage || 0);
+                        const changeClass = change >= 0 ? 'text-success' : 'text-danger';
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${index.SecurityName || '-'}</td>
+                            <td>${index.Close || '-'}</td>
+                            <td class="${changeClass}">${change.toFixed(2)}</td>
+                            <td class="${changeClass}">${percentChange.toFixed(2)}%</td>
+                            <td>${index.High || '-'}</td>
+                            <td>${index.Low || '-'}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No indices data available</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading StockEdge indices data:', error);
+                const tableBody = document.getElementById('stockedgeIndicesBody');
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading data. Please try again.</td></tr>';
+            }
+        }
+
+        // Function to load StockEdge price movers data
+        async function loadStockEdgePriceMovers() {
+            try {
+                const response = await fetch('/api/stockedge/price-movers');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                const tableBody = document.getElementById('stockedgePriceMoversBody');
+                tableBody.innerHTML = '';
+                
+                if (data && data.length > 0) {
+                    data.forEach(stock => {
+                        const change = parseFloat(stock.CZ || 0);
+                        const percentChange = parseFloat(stock.CZG || 0);
+                        const changeClass = change >= 0 ? 'text-success' : 'text-danger';
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${stock.Name || '-'}</td>
+                            <td>${stock.SectorName || '-'}</td>
+                            <td>${stock.C || '-'}</td>
+                            <td class="${changeClass}">${change.toFixed(2)}</td>
+                            <td class="${changeClass}">${percentChange.toFixed(2)}%</td>
+                        `;
+                    tableBody.appendChild(row);
+                });
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No price movers data available</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading StockEdge price movers data:', error);
+                const tableBody = document.getElementById('stockedgePriceMoversBody');
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error loading data. Please try again.</td></tr>';
+            }
+        }
+
+        // Function to load StockEdge index gainers data
+        async function loadStockEdgeIndexGainers() {
+            try {
+                const response = await fetch('/api/stockedge/index-gainers');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                const tableBody = document.getElementById('stockedgeIndexGainersBody');
+                tableBody.innerHTML = '';
+                
+                if (data && data.length > 0) {
+                    data.forEach(index => {
+                        const change = parseFloat(index.Change || 0);
+                        const percentChange = parseFloat(index.ChangePercentage || 0);
+                        const changeClass = change >= 0 ? 'text-success' : 'text-danger';
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${index.SecurityName || '-'}</td>
+                            <td>${index.Close || '-'}</td>
+                            <td class="${changeClass}">${change.toFixed(2)}</td>
+                            <td class="${changeClass}">${percentChange.toFixed(2)}%</td>
+                            <td>${index.High || '-'}</td>
+                            <td>${index.Low || '-'}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No index gainers data available</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading StockEdge index gainers data:', error);
+                const tableBody = document.getElementById('stockedgeIndexGainersBody');
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading data. Please try again.</td></tr>';
+            }
+        }
+
+        // Function to load StockEdge insider deals data
+        async function loadStockEdgeInsiderDeals() {
+            try {
+                const response = await fetch('/api/stockedge/insider-deals');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                const tableBody = document.getElementById('stockedgeInsiderDealsBody');
+                tableBody.innerHTML = '';
+                
+                if (data && data.length > 0) {
+                    data.forEach(deal => {
+                        const directionClass = deal.DealDirectionType === 'Positive' ? 'text-success' : 'text-danger';
+                        const directionIcon = deal.DealDirectionType === 'Positive' ? '↑' : '↓';
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${deal.SecurityName || '-'}</td>
+                            <td>${deal.ExchangeName || '-'}</td>
+                            <td>${deal.ClientName || '-'}</td>
+                            <td>${deal.PersonCategory || '-'}</td>
+                            <td class="${directionClass}">${directionIcon} ${deal.DealTransactionType || '-'}</td>
+                            <td>${deal.DealMode || '-'}</td>
+                            <td>${deal.DealQuantity?.toLocaleString() || '-'}</td>
+                            <td>₹${deal.TotalDealValue?.toLocaleString() || '-'}</td>
+                            <td>₹${deal.ValuePerShare?.toLocaleString() || '-'}</td>
+                            <td>${deal.HoldingPostDealG?.toFixed(2) || '-'}%</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="10" class="text-center">No insider deals data available</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading StockEdge insider deals data:', error);
+                const tableBody = document.getElementById('stockedgeInsiderDealsBody');
+                tableBody.innerHTML = '<tr><td colspan="10" class="text-center text-danger">Error loading data. Please try again.</td></tr>';
+            }
+        }
+
+        // Load StockEdge data when tab is clicked
+        document.getElementById('stockedge-tab').addEventListener('click', () => {
+            loadStockEdgeIndices();
+            loadStockEdgePriceMovers();
+            loadStockEdgeIndexGainers();
+            loadStockEdgeInsiderDeals();
+            loadCorporateAnnouncements();
+        });
+
+        async function fetchStockData(symbol) {
+            try {
+                const response = await fetch(`/api/stockedge/stock/${symbol}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching stock data:', error);
+                return null;
+            }
+        }
+
+        async function fetchHistoricalData(symbol, timeframe = '1M') {
+            try {
+                const response = await fetch(`/api/stockedge/stock/${symbol}/history?timeframe=${timeframe}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching historical data:', error);
+                return null;
+            }
+        }
+
+        // Function to handle stock search
+        async function searchStocks() {
+            const searchInput = document.getElementById('stockSearch');
+            const query = searchInput.value.trim();
+            
+            if (query.length < 2) {
+                alert('Please enter at least 2 characters to search');
+                return;
+            }
+
+            const searchResults = document.getElementById('searchResults');
+            searchResults.innerHTML = '<div class="p-2 text-muted">Searching...</div>';
+            searchResults.style.display = 'block';
+
+            try {
+                const response = await fetch(`/api/nse/stock/${query}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                searchResults.innerHTML = `
+                    <div class="search-result-item p-2 border-bottom" 
+                         onclick="showStockDetails('${data.info.symbol}')" 
+                         style="cursor: pointer;">
+                        <div class="fw-bold">${data.info.symbol}</div>
+                        <div class="text-muted small">
+                            ${data.info.companyName}
+                            <br>
+                            ${data.info.industry} - ${data.info.sector}
+                            <br>
+                            Market Cap: ${data.marketCap.label}
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error searching stocks:', error);
+                searchResults.innerHTML = '<div class="p-2 text-danger">Error searching stocks. Please try again.</div>';
+            }
+        }
+
+        // Function to show stock details
+        async function showStockDetails(symbol) {
+            try {
+                const response = await fetch(`/api/nse/stock/${symbol}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Create a modal to display stock details
+                const modal = document.createElement('div');
+                modal.className = 'modal fade';
+                modal.id = 'stockDetailsModal';
+                modal.innerHTML = `
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">${data.info.companyName} (${data.info.symbol})</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6 class="mb-3">Price Information</h6>
+                                        <p><strong>Last Price:</strong> ₹${data.priceInfo.lastPrice?.toFixed(2) || '-'}</p>
+                                        <p><strong>Change:</strong> <span class="${data.priceInfo.change >= 0 ? 'text-success' : 'text-danger'}">${data.priceInfo.change?.toFixed(2) || '-'} (${data.priceInfo.pChange?.toFixed(2) || '-'}%)</span></p>
+                                        <p><strong>Day High:</strong> ₹${data.priceInfo.dayHigh?.toFixed(2) || '-'}</p>
+                                        <p><strong>Day Low:</strong> ₹${data.priceInfo.dayLow?.toFixed(2) || '-'}</p>
+                                        <p><strong>Open:</strong> ₹${data.priceInfo.open?.toFixed(2) || '-'}</p>
+                                        <p><strong>Previous Close:</strong> ₹${data.priceInfo.previousClose?.toFixed(2) || '-'}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="mb-3">Company Information</h6>
+                                        <p><strong>Industry:</strong> ${data.info.industry || '-'}</p>
+                                        <p><strong>Sector:</strong> ${data.info.sector || '-'}</p>
+                                        <p><strong>Market Cap:</strong> ${data.marketCap.label || '-'}</p>
+                                        <p><strong>Volume:</strong> ${data.volume.totalTradedVolume?.toLocaleString() || '-'}</p>
+                                        <p><strong>Value:</strong> ₹${(data.volume.totalTradedValue / 10000000).toFixed(2)} Cr</p>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <h6 class="mb-3">Fundamentals</h6>
+                                        <p><strong>P/E Ratio:</strong> ${data.fundamentals.pe?.toFixed(2) || '-'}</p>
+                                        <p><strong>Book Value:</strong> ₹${data.fundamentals.bookValue?.toFixed(2) || '-'}</p>
+                                        <p><strong>Dividend Yield:</strong> ${data.fundamentals.dividendYield?.toFixed(2) || '-'}%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                const modalInstance = new bootstrap.Modal(modal);
+                modalInstance.show();
+                
+                // Remove modal from DOM when hidden
+                modal.addEventListener('hidden.bs.modal', () => {
+                    document.body.removeChild(modal);
+                });
+            } catch (error) {
+                console.error('Error showing stock details:', error);
+                alert('Error loading stock details. Please try again.');
+            }
+        }
+
+        // Add event listener for search input
+        document.getElementById('stockSearch').addEventListener('input', function(e) {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+            
+            if (query.length >= 2) {
+                searchTimeout = setTimeout(searchStocks, 300);
+            } else {
+                document.getElementById('searchResults').style.display = 'none';
+            }
+        });
+
+        // Close search results when clicking outside
+        document.addEventListener('click', function(e) {
+            const searchContainer = document.querySelector('.search-container');
+            if (!searchContainer.contains(e.target)) {
+                document.getElementById('searchResults').style.display = 'none';
+            }
+        });
+
+        // Function to load most visited stocks
+        async function loadMostVisitedStocks() {
+            try {
+                const response = await fetch('/api/stockedge/most-visited');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                const tableBody = document.getElementById('mostVisitedStocksBody');
+                tableBody.innerHTML = '';
+                
+                if (data && data.length > 0) {
+                    data.forEach(stock => {
+                        const changeClass = stock.change >= 0 ? 'text-success' : 'text-danger';
+                        const changeIcon = stock.change >= 0 ? '↑' : '↓';
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>
+                                <div class="stock-info">
+                                    <span class="stock-name">${stock.name}</span>
+                                    ${isProduction ? '<small class="text-muted">(Mock Data)</small>' : ''}
+                                </div>
+                            </td>
+                            <td>${stock.exchange}</td>
+                            <td>₹${stock.price?.toFixed(2) || '-'}</td>
+                            <td class="${changeClass}">
+                                ${changeIcon} ${Math.abs(stock.change).toFixed(2)}
+                            </td>
+                            <td class="${changeClass}">
+                                ${Math.abs(stock.changePercent).toFixed(2)}%
+                            </td>
+                            <td>${stock.sector || '-'}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No most visited stocks data available</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading most visited stocks:', error);
+                const tableBody = document.getElementById('mostVisitedStocksBody');
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading data. Please try again.</td></tr>';
+            }
+        }
+
+        // Add these variables at the beginning of your script section
+        let currentAnnouncementPage = 1;
+        let totalAnnouncementPages = 1;
+        let totalAnnouncementRecords = 0;
+        const announcementPageSize = 19;
+
+        // Function to change announcement page
+        function changeAnnouncementPage(delta) {
+            const newPage = currentAnnouncementPage + delta;
+            if (newPage >= 1 && newPage <= totalAnnouncementPages) {
+                currentAnnouncementPage = newPage;
+                updateAnnouncementPaginationControls();
+                loadCorporateAnnouncements();
+            }
+        }
+
+        // Function to update announcement pagination controls
+        function updateAnnouncementPaginationControls() {
+            document.getElementById('announcementPageInfo').textContent = `Page ${currentAnnouncementPage} of ${totalAnnouncementPages}`;
+            document.getElementById('prevAnnouncementPage').disabled = currentAnnouncementPage === 1;
+            document.getElementById('nextAnnouncementPage').disabled = currentAnnouncementPage === totalAnnouncementPages;
+            document.getElementById('totalAnnouncements').textContent = `Total Records: ${totalAnnouncementRecords}`;
+        }
+
+        // Function to load corporate announcements
+        async function loadCorporateAnnouncements() {
+            try {
+                const searchTerm = document.getElementById('announcementSearch').value;
+                const typeFilter = document.getElementById('announcementType').value;
+                const loadingSpinner = document.getElementById('announcementLoadingSpinner');
+                const tableBody = document.getElementById('corporateAnnouncementsBody');
+
+                // Show loading state
+                loadingSpinner.classList.remove('d-none');
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Loading data...</td></tr>';
+
+                console.log('Fetching corporate announcements...');
+                const response = await fetch(`/api/stockedge/corporate-announcements?page=${currentAnnouncementPage}&pageSize=${announcementPageSize}`);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.details || `HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('Received data:', result);
+
+                if (!result.data || !Array.isArray(result.data)) {
+                    throw new Error('Invalid data format received from server');
+                }
+
+                // Update pagination info
+                totalAnnouncementRecords = result.total || 0;
+                totalAnnouncementPages = result.totalPages || 1;
+                updateAnnouncementPaginationControls();
+
+                // Filter data based on search term and type
+                let filteredData = result.data || [];
+                if (searchTerm) {
+                    const searchLower = searchTerm.toLowerCase();
+                    filteredData = filteredData.filter(announcement => 
+                        (announcement.SecurityName && announcement.SecurityName.toLowerCase().includes(searchLower)) ||
+                        (announcement.Subject && announcement.Subject.toLowerCase().includes(searchLower))
+                    );
+                }
+                if (typeFilter) {
+                    filteredData = filteredData.filter(announcement => 
+                        announcement.TypeOfAnnouncement === typeFilter
+                    );
+                }
+
+                if (filteredData.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No announcements found</td></tr>';
+                    return;
+                }
+
+                tableBody.innerHTML = filteredData.map(announcement => `
+                    <tr>
+                        <td>
+                            <div class="stock-info">
+                                <span class="stock-name">${announcement.SecurityName || '-'}</span>
+                            </div>
+                        </td>
+                        <td>${announcement.Subject || '-'}</td>
+                        <td>${announcement.TypeOfAnnouncement || '-'}</td>
+                        <td>${formatDate(announcement.Date)}</td>
+                        <td>
+                            ${announcement.FileURL ? 
+                                `<a href="${announcement.FileURL}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-file-earmark-text"></i> View
+                                </a>` : 
+                                '-'
+                            }
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading corporate announcements:', error);
+                document.getElementById('corporateAnnouncementsBody').innerHTML = 
+                    `<tr><td colspan="5" class="text-center text-danger">
+                        Error loading data: ${error.message}
+                    </td></tr>`;
+            } finally {
+                document.getElementById('announcementLoadingSpinner').classList.add('d-none');
+            }
+        }
+
+        // Add event listeners for search and filter
+        document.getElementById('announcementSearch').addEventListener('input', function(e) {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+            
+            if (query.length >= 2) {
+                searchTimeout = setTimeout(loadCorporateAnnouncements, 300);
+            } else {
+                loadCorporateAnnouncements();
+            }
+        });
+
+        document.getElementById('announcementType').addEventListener('change', loadCorporateAnnouncements);
+    </script>
+</body>
+</html> 
